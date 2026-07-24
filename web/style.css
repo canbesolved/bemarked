@@ -1,0 +1,22 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
+/* bmkd SPA styles. Served same-origin at /style.css (embedded in the binary). */
+:root { color-scheme: light dark; }
+
+body {
+  margin: 0;
+  font: 14px/1.4 system-ui, sans-serif;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  height: 100vh;
+}
+
+#side {
+  border-right: 1px solid #8883;
+  overflow: auto;
+  padding: .5rem;
+}
+
+#main {
+  overflow: auto;
+  padding: 1rem;
+}
