@@ -1,0 +1,14 @@
+# bmkd configuration (key = value / key = "value"; # starts a comment)
+
+port = 8989
+bind = "127.0.0.1"        # loopback only; set to "0.0.0.0" for LAN (requires auth)
+bookmarks_dir = "./data"  # bookmarks.tsv lives here
+tray_icon = enable        # enable | disable (ignored on headless platforms)
+
+# Start Page shortcuts grid
+shortcuts_on_row = 4
+rows = 3
+
+# shortcut[N] = "Name | #HEX_COLOR | URL"
+shortcut[0] = "GitHub | #24292e | https://github.com"
+shortcut[1] = "Search | #4285f4 | https://duckduckgo.com"

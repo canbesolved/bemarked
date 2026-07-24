@@ -1,0 +1,23 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-2.0-only -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>bmkd</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside id="side">
+    <input id="folderFilter" placeholder="Filter folders…">
+    <button id="allBookmarks">All Bookmarks</button>
+    <nav id="folderTree"><!-- folder tree built from '/'-separated folder paths --></nav>
+  </aside>
+  <main id="main">
+    <input id="search" placeholder="Search name, folder, url…">
+    <section id="shortcuts"><!-- start-page grid --></section>
+    <table id="table"><!-- columns: Name | Folder | URL --></table>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
