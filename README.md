@@ -12,7 +12,7 @@ embedded server, an embedded single-file web UI, and human-readable **TSV** stor
 One bookmark per line, TAB-separated, versioned header:
 
 ```
-# bmkd v1	id	name	folder	url
+#	id	name	folder	url
 7fa93d2c	Linux	dev/sources	https://linux.org
 a1b2c3d4	Open Source Initiative	dev/sources/osi	https://opensource.org
 ```
