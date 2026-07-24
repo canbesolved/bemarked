@@ -21,9 +21,14 @@ struct bookmark {
 /* Generate a new stable 8-hex-char id (not derived from name). */
 void model_new_id(char out[BMKD_ID_LEN + 1]);
 
-/* Validate a bookmark for write: required id+name, url scheme allowlist,
- * folder normalization (no leading/trailing slash, no empty segments),
- * reject raw TAB/newline. Returns 0 if valid. */
+/* Clean a bookmark in place for storage: strip raw TAB/CR/LF from every field
+ * (they would corrupt the TSV) and normalize the folder path — no leading/
+ * trailing slash, no empty or whitespace-only segments. */
+void model_sanitize(struct bookmark *b);
+
+/* Validate for write. Returns 0 if valid, non-zero otherwise:
+ *   -1 missing id or name
+ *   -2 url scheme not http/https (empty url is allowed) */
 int model_validate(const struct bookmark *b);
 
 #endif /* BMKD_MODEL_H */

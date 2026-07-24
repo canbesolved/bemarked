@@ -24,4 +24,7 @@ int storage_get(struct storage *s, const char *id, struct bookmark *out);
 int storage_save(struct storage *s, const struct bookmark *b);   /* create or update by id */
 int storage_delete(struct storage *s, const char *id);
 
+/* True if a bookmark with this id exists (used to keep generated ids unique). */
+int storage_id_exists(struct storage *s, const char *id);
+
 #endif /* BMKD_STORAGE_H */

@@ -8,16 +8,55 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <header id="topbar">
+    <button id="navToggle" class="icon-btn" aria-label="Menu">☰</button>
+    <span class="topbar-title">bmkd</span>
+  </header>
+  <div id="navBackdrop"></div>
+
   <aside id="side">
-    <input id="folderFilter" placeholder="Filter folders…">
-    <button id="allBookmarks">All Bookmarks</button>
-    <nav id="folderTree"><!-- folder tree built from '/'-separated folder paths --></nav>
+    <div class="side-head">
+      <h1>bmkd</h1>
+      <button id="themeToggle" class="icon-btn" title="Toggle theme" aria-label="Toggle theme"></button>
+    </div>
+    <input id="folderFilter" placeholder="Search folder…" autocomplete="off">
+    <button id="allBookmarks" class="tree-node active">Homepage</button>
+    <button id="newBtn" class="tree-node new-btn">+ New bookmark</button>
+    <nav id="folderTree"></nav>
   </aside>
+
   <main id="main">
-    <input id="search" placeholder="Search name, folder, url…">
-    <section id="shortcuts"><!-- start-page grid --></section>
-    <table id="table"><!-- columns: Name | Folder | URL --></table>
+    <div class="search-wrap" id="searchWrap">
+      <input id="search" placeholder="Search name, folder, url…" autocomplete="off">
+    </div>
+
+    <section id="shortcuts"></section>
+
+    <div class="table-wrap">
+      <table id="table" hidden>
+        <thead><tr><th>Name</th><th>Folder</th><th>URL</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p id="empty" class="empty" hidden>No bookmarks.</p>
   </main>
+
+  <!-- add/edit form: dropdown overlay, opened by "+ New bookmark" / Edit -->
+  <div id="overlay" hidden>
+    <form id="form">
+      <h2 id="f-title">New bookmark</h2>
+      <input type="hidden" id="f-id">
+      <input id="f-name" placeholder="Name" required>
+      <input id="f-folder" placeholder="Folder (e.g. dev/sources)" list="folderOptions" autocomplete="off">
+      <datalist id="folderOptions"></datalist>
+      <input id="f-url" placeholder="https://…" required>
+      <div class="form-actions">
+        <button type="submit" id="saveBtn">Save</button>
+        <button type="button" id="cancelBtn">Cancel</button>
+      </div>
+    </form>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
