@@ -16,7 +16,7 @@
 
 struct server;  /* opaque */
 
-struct server *server_start(const struct config *cfg, struct storage *storage);
+struct server *server_start(struct config *cfg, struct storage *storage);
 void           server_stop(struct server *s);
 
 #endif /* BMKD_SERVER_H */

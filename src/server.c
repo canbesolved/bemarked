@@ -13,6 +13,7 @@
 #include "folder_icon_svg.h"
 #include "arrow_icon_svg.h"
 #include "arrow_down_icon_svg.h"
+#include "add_icon_svg.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,7 +27,7 @@ struct server {
     struct mg_mgr mgr;
     pthread_t thread;
     volatile int running;
-    const struct config *cfg;
+    struct config *cfg;
     struct storage *st;
     struct mg_connection *listener;
 };
@@ -229,10 +230,8 @@ static void config_public(struct mg_connection *c, const struct config *cfg) {
     struct sb s = {0};
     int i, first = 1;
     char num[32];
-    sb_str(&s, "{\"shortcuts_on_row\":");
-    snprintf(num, sizeof(num), "%d", cfg->shortcuts_on_row); sb_str(&s, num);
-    sb_str(&s, ",\"rows\":");
-    snprintf(num, sizeof(num), "%d", cfg->rows); sb_str(&s, num);
+    sb_str(&s, "{\"shortcuts_per_row\":");
+    snprintf(num, sizeof(num), "%d", cfg->shortcuts_per_row); sb_str(&s, num);
     sb_str(&s, ",\"link_open_mode\":\"");
     sb_json(&s, cfg->link_open_mode);
     sb_str(&s, "\",\"shortcuts\":[");
@@ -250,6 +249,40 @@ static void config_public(struct mg_connection *c, const struct config *cfg) {
     sb_str(&s, "]}\n");
     mg_http_reply(c, 200, JSON_HDRS, "%s", s.buf);
     free(s.buf);
+}
+
+static void shortcuts_list(struct mg_connection *c, const struct config *cfg) {
+    struct sb s = {0};
+    int i, first = 1;
+    char num[16];
+    sb_str(&s, "[");
+    for (i = 0; i < cfg->shortcut_count; i++) {
+        const struct shortcut *sc = &cfg->shortcuts[i];
+        if (sc->name[0] == '\0') continue;
+        if (!first) sb_str(&s, ",");
+        first = 0;
+        sb_str(&s, "{\"index\":");
+        snprintf(num, sizeof(num), "%d", i); sb_str(&s, num);
+        sb_str(&s, ",");
+        sb_field(&s, "name", sc->name, 0);
+        sb_field(&s, "color", sc->color, 0);
+        sb_field(&s, "url", sc->url, 1);
+        sb_str(&s, "}");
+    }
+    sb_str(&s, "]\n");
+    mg_http_reply(c, 200, JSON_HDRS, "%s", s.buf ? s.buf : "[]\n");
+    free(s.buf);
+}
+
+static void shortcuts_add(struct mg_connection *c, struct config *cfg,
+                          struct mg_http_message *hm) {
+    char name[128], color[16], url[1024];
+    json_field(hm->body, "$.name", name, sizeof(name));
+    json_field(hm->body, "$.color", color, sizeof(color));
+    json_field(hm->body, "$.url", url, sizeof(url));
+    if (name[0] == '\0') { reply_err(c, 400, "name required"); return; }
+    if (config_add_shortcut(cfg, name, color, url) < 0) { reply_err(c, 500, "add failed"); return; }
+    shortcuts_list(c, cfg);
 }
 
 /* --- dispatcher --- */
@@ -300,10 +333,31 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
         serve_asset(c, "image/svg+xml", arrow_down_icon_svg, arrow_down_icon_svg_len);
         return;
     }
+    if (is_get && mg_strcmp(hm->uri, mg_str("/assets/add_icon.svg")) == 0) {
+        serve_asset(c, "image/svg+xml", add_icon_svg, add_icon_svg_len);
+        return;
+    }
 
     /* API */
     if (is_get && mg_strcmp(hm->uri, mg_str("/config/public")) == 0) {
         config_public(c, srv->cfg);
+        return;
+    }
+    if (mg_strcmp(hm->uri, mg_str("/shortcuts")) == 0) {
+        if (is_get)  { shortcuts_list(c, srv->cfg); return; }
+        if (is_post) { shortcuts_add(c, srv->cfg, hm); return; }
+        reply_err(c, 405, "method not allowed");
+        return;
+    }
+    if (mg_match(hm->uri, mg_str("/shortcuts/*"), caps)) {
+        if (is_delete) {
+            char idx[16];
+            snprintf(idx, sizeof(idx), "%.*s", (int)caps[0].len, caps[0].buf);
+            if (config_delete_shortcut(srv->cfg, atoi(idx)) != 0) { reply_err(c, 404, "not found"); return; }
+            mg_http_reply(c, 200, JSON_HDRS, "{\"ok\":true}\n");
+            return;
+        }
+        reply_err(c, 405, "method not allowed");
         return;
     }
     if (is_get && mg_strcmp(hm->uri, mg_str("/search")) == 0) {
@@ -349,7 +403,7 @@ static void *run(void *arg) {
     return NULL;
 }
 
-struct server *server_start(const struct config *cfg, struct storage *storage) {
+struct server *server_start(struct config *cfg, struct storage *storage) {
     struct server *s = calloc(1, sizeof(*s));
     char url[128];
     if (!s) return NULL;
