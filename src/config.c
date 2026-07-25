@@ -208,3 +208,17 @@ int config_delete_shortcut(struct config *c, int index) {
     memset(&c->shortcuts[c->shortcut_count], 0, sizeof(struct shortcut));
     return config_save(c);
 }
+
+int config_update_shortcut(struct config *c, int index, const char *name,
+                           const char *color, const char *url) {
+    struct shortcut *s, old;
+    if (index < 0 || index >= c->shortcut_count) return -1;
+    s = &c->shortcuts[index];
+    old = *s;
+    memset(s, 0, sizeof(*s));
+    sc_clean(s->name, sizeof(s->name), name);
+    sc_clean(s->color, sizeof(s->color), color);
+    sc_clean(s->url, sizeof(s->url), url);
+    if (!s->name[0] || config_save(c) != 0) { *s = old; return -1; }
+    return 0;
+}

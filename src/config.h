@@ -33,4 +33,8 @@ int config_add_shortcut(struct config *c, const char *name, const char *color, c
 /* Delete shortcut at index, renumber the rest densely, persist. 0 on success. */
 int config_delete_shortcut(struct config *c, int index);
 
+/* Update the shortcut at index and persist. Returns 0 on success, -1 on error. */
+int config_update_shortcut(struct config *c, int index, const char *name,
+                           const char *color, const char *url);
+
 #endif /* BMKD_CONFIG_H */
