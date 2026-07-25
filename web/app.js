@@ -161,11 +161,19 @@ function renderRows() {
     name.className = "bm-name";
     name.textContent = b.name;                    // textContent => no XSS
     main.appendChild(name);
-    if (searchMode && b.folder) {
-      const sub = document.createElement("div");
-      sub.className = "bm-sub";
-      sub.textContent = b.folder;
-      main.appendChild(sub);
+    if (searchMode) {
+      if (b.folder) {
+        const fsub = document.createElement("div");
+        fsub.className = "bm-sub";
+        fsub.textContent = "folder: " + b.folder;
+        main.appendChild(fsub);
+      }
+      if (b.url) {
+        const usub = document.createElement("div");
+        usub.className = "bm-sub";
+        usub.textContent = "url: " + b.url;
+        main.appendChild(usub);
+      }
     }
 
     const act = document.createElement("div");
