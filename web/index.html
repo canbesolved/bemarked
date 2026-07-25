@@ -54,6 +54,23 @@
     </form>
   </div>
 
+  <!-- new shortcut popup -->
+  <div id="shortcutOverlay" hidden>
+    <form id="shortcutForm">
+      <h2>New shortcut</h2>
+      <input id="sc-name" placeholder="Name" required>
+      <div class="color-row">
+        <input id="sc-color" placeholder="#4285f4" autocomplete="off">
+        <input type="color" id="sc-color-picker" value="#4285f4" aria-label="Pick a color">
+      </div>
+      <input id="sc-url" placeholder="https://…" required>
+      <div class="form-actions">
+        <button type="submit">Save</button>
+        <button type="button" id="sc-cancel">Cancel</button>
+      </div>
+    </form>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

@@ -1,14 +1,16 @@
-# bmkd configuration (key = value / key = "value"; # starts a comment)
-
+# BMKD configuration  file v1
+# Format: key = value or key = "value"
+# Use # for comments
+bind = "127.0.0.1"        # localhost-only by default
 port = 8989
-bind = "127.0.0.1"        # loopback only; set to "0.0.0.0" for LAN (requires auth)
 bookmarks_dir = "./data"  # bookmarks.tsv lives here
 tray_icon = enable        # enable | disable (ignored on headless platforms)
+link_open_mode = "new-tab"  # new-tab | same-tab — how bookmark links open
 
-# Start Page shortcuts grid
-shortcuts_on_row = 4
-rows = 3
+# Homepage shortcut grid
+shortcuts_per_row = 4
 
-# shortcut[N] = "Name | #HEX_COLOR | URL"
+# Shortcut definition
+# shortcut[N] = "name | #hex_color | url"
 shortcut[0] = "GitHub | #24292e | https://github.com"
 shortcut[1] = "Search | #4285f4 | https://duckduckgo.com"

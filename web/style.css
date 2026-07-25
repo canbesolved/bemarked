@@ -281,7 +281,7 @@ button:hover { border-color: var(--accent); }
 .empty { color: var(--muted); padding: 1rem 0; text-align: center; }
 
 /* --- add/edit form: dropdown overlay --- */
-#overlay {
+#overlay, #shortcutOverlay {
   position: fixed;
   inset: 0;
   background: #0007;
@@ -291,8 +291,8 @@ button:hover { border-color: var(--accent); }
   padding-top: 12vh;
   z-index: 20;
 }
-#overlay[hidden] { display: none; }
-#form {
+#overlay[hidden], #shortcutOverlay[hidden] { display: none; }
+#form, #shortcutForm {
   width: min(420px, 92vw);
   display: grid;
   gap: .6rem;
@@ -304,11 +304,31 @@ button:hover { border-color: var(--accent); }
   animation: drop .12s ease;
 }
 @keyframes drop { from { transform: translateY(-10px); opacity: 0; } }
-#form h2 { margin: .1rem 0 .3rem; font-size: 1.05rem; }
-#form input { margin: 0; }
+#form h2, #shortcutForm h2 { margin: .1rem 0 .3rem; font-size: 1.05rem; }
+#form input, #shortcutForm input { margin: 0; }
 .form-actions { display: flex; gap: .5rem; }
-#saveBtn { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
-#saveBtn:hover { background: var(--accent-hover); }
+#saveBtn, #shortcutForm button[type="submit"] {
+  background: var(--accent); color: var(--on-accent); border-color: var(--accent);
+}
+#saveBtn:hover, #shortcutForm button[type="submit"]:hover { background: var(--accent-hover); }
+
+/* color field: hex input + native picker swatch */
+.color-row { display: flex; gap: .5rem; align-items: stretch; }
+.color-row #sc-color { flex: 1; }
+.color-row input[type="color"] {
+  width: 2.6rem; padding: 2px; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--surface);
+}
+
+/* "add shortcut" card: always last in the grid */
+.shortcut-add {
+  display: flex; align-items: center; justify-content: center;
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--muted);
+}
+.shortcut-add:hover { border-color: var(--accent); color: var(--accent); }
+.ic-add { --i: url("/assets/add_icon.svg"); width: 1.6em; height: 1.6em; }
 
 /* --- mobile top bar + drawer (hidden on desktop) --- */
 #topbar { display: none; }

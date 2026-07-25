@@ -123,24 +123,69 @@ function renderFolderOptions() {
   }
 }
 
+// Pick a readable text color for a hex background (YIQ contrast).
+function textOn(bg) {
+  let h = bg.replace("#", "");
+  if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+  if (h.length < 6) return "#fff";
+  const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 >= 128 ? "#111" : "#fff";
+}
+
 // --- shortcuts (small square cards) ---
 async function renderShortcuts() {
   const cfg = await api("GET", "/config/public").catch(() => null);
   if (cfg) openInNewTab = cfg.link_open_mode !== "same-tab";
   const el = $("shortcuts");
   el.textContent = "";
-  if (!cfg || !cfg.shortcuts.length) return;
-  const cols = cfg.shortcuts_on_row || 4;
-  el.style.setProperty("--cols", cols);   /* CSS decides layout; media query can wrap */
-  for (const s of cfg.shortcuts.slice(0, cols * (cfg.rows || 3))) {
+  el.style.setProperty("--cols", (cfg && cfg.shortcuts_per_row) || 4);
+  for (const s of (cfg && cfg.shortcuts) || []) {
     const a = document.createElement("a");
     a.className = "shortcut";
     a.textContent = s.name;
     a.href = /^https?:\/\//.test(s.url) ? s.url : "#";
     if (openInNewTab) { a.target = "_blank"; a.rel = "noopener noreferrer"; }  // else same tab
-    a.style.background = /^#[0-9a-fA-F]{3,8}$/.test(s.color) ? s.color : "#666";
+    const bg = /^#[0-9a-fA-F]{3,8}$/.test(s.color) ? s.color : "#666";
+    a.style.background = bg;
+    const light = textOn(bg) === "#fff";
+    a.style.color = light ? "#fff" : "#111";
+    a.style.textShadow = light ? "0 1px 2px #0006" : "none";   // shadow only helps white text
     el.appendChild(a);
   }
+  // always-last "add shortcut" card
+  const add = document.createElement("button");
+  add.className = "shortcut shortcut-add";
+  add.title = "New shortcut";
+  const ic = document.createElement("span");
+  ic.className = "ic ic-add";
+  add.appendChild(ic);
+  add.onclick = openShortcutForm;
+  el.appendChild(add);
+}
+
+// --- new-shortcut popup ---
+function openShortcutForm() {
+  $("shortcutForm").reset();
+  $("sc-color").value = "";
+  $("sc-color-picker").value = "#4285f4";
+  closeNav();
+  $("shortcutOverlay").hidden = false;
+  $("sc-name").focus();
+}
+function closeShortcutForm() { $("shortcutOverlay").hidden = true; $("shortcutForm").reset(); }
+
+async function submitShortcut(e) {
+  e.preventDefault();
+  const body = {
+    name: $("sc-name").value,
+    color: $("sc-color").value || $("sc-color-picker").value,
+    url: $("sc-url").value,
+  };
+  try {
+    await api("POST", "/shortcuts", body);
+    closeShortcutForm();
+    await renderShortcuts();
+  } catch (err) { alert("Add failed: " + err.message); }
 }
 
 // --- bookmark table (folder / search view) ---
@@ -377,7 +422,19 @@ $("newBtn").onclick = () => openForm(null);
 $("cancelBtn").onclick = closeForm;
 $("form").onsubmit = submitForm;
 $("overlay").onclick = (e) => { if (e.target === $("overlay")) closeForm(); };  // click backdrop to close
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeForm(); });
+
+// new-shortcut popup wiring + color/hex sync
+$("shortcutForm").onsubmit = submitShortcut;
+$("sc-cancel").onclick = closeShortcutForm;
+$("shortcutOverlay").onclick = (e) => { if (e.target === $("shortcutOverlay")) closeShortcutForm(); };
+$("sc-color").oninput = (e) => {
+  if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) $("sc-color-picker").value = e.target.value;
+};
+$("sc-color-picker").oninput = (e) => { $("sc-color").value = e.target.value; };
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") { closeForm(); closeShortcutForm(); }
+});
 
 renderShortcuts();
 load();

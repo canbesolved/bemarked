@@ -13,6 +13,7 @@ set(WEB_ASSETS
   "assets/folder_icon.svg:folder_icon_svg"
   "assets/arrow_icon.svg:arrow_icon_svg"
   "assets/arrow_down_icon.svg:arrow_down_icon_svg"
+  "assets/add_icon.svg:add_icon_svg"
 )
 set(WEB_GEN_HEADERS "")
 foreach(entry ${WEB_ASSETS})
