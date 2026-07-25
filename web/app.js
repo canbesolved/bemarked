@@ -59,7 +59,9 @@ function renderTreeInto(map, container, depth) {
     const caret = document.createElement("span");
     caret.className = "folder-caret" + (hasKids ? "" : " leaf");
     if (hasKids) {
-      caret.textContent = expanded ? "▾" : "▸";
+      const cic = document.createElement("span");
+      cic.className = "ic " + (expanded ? "ic-arrow-down" : "ic-arrow");
+      caret.appendChild(cic);
       caret.onclick = (e) => {
         e.stopPropagation();
         if (expanded) state.expanded.delete(path); else state.expanded.add(path);
@@ -70,7 +72,10 @@ function renderTreeInto(map, container, depth) {
 
     const btn = document.createElement("button");
     btn.className = "tree-node";
-    btn.textContent = "📁 " + name;
+    const fic = document.createElement("span");
+    fic.className = "ic ic-folder";
+    btn.appendChild(fic);
+    btn.appendChild(document.createTextNode(" " + name));
     btn.title = path;
     btn.onclick = () => { state.folder = path; state.query = ""; $("search").value = ""; closeNav(); render(); };
     row.appendChild(btn);
