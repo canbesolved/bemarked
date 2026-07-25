@@ -3,7 +3,7 @@
 // Thin client: renders + navigates; the backend is authoritative for data/search.
 
 const $ = (id) => document.getElementById(id);
-const state = { bookmarks: [], folder: "", query: "", expanded: new Set() };
+const state = { bookmarks: [], folder: "", query: "", expanded: new Set(), openItems: new Set() };
 
 // --- data ---
 async function api(method, path, body) {
@@ -149,11 +149,27 @@ function renderRows() {
   $("list").hidden = list.length === 0;    // hide the list when there are no bookmarks
   $("empty").hidden = list.length > 0;
   const searchMode = !state.folder && !!state.query;   // results span folders -> show folder
+  const folderView = !!state.folder;
   for (const b of list) {
     const valid = /^https?:\/\//.test(b.url);
     const item = document.createElement("div");
     item.className = "bm-item";
     if (valid) item.onclick = () => window.open(b.url, "_blank", "noopener");  // whole item clickable
+
+    if (folderView) {   // expand caret -> reveals the url as subtext
+      const open = state.openItems.has(b.id);
+      const caret = document.createElement("span");
+      caret.className = "bm-caret";
+      const cic = document.createElement("span");
+      cic.className = "ic " + (open ? "ic-arrow-down" : "ic-arrow");
+      caret.appendChild(cic);
+      caret.onclick = (e) => {
+        e.stopPropagation();
+        if (open) state.openItems.delete(b.id); else state.openItems.add(b.id);
+        renderRows();
+      };
+      item.appendChild(caret);
+    }
 
     const main = document.createElement("div");
     main.className = "bm-main";
@@ -174,6 +190,11 @@ function renderRows() {
         usub.textContent = "url: " + b.url;
         main.appendChild(usub);
       }
+    } else if (folderView && state.openItems.has(b.id) && b.url) {
+      const usub = document.createElement("div");
+      usub.className = "bm-sub";
+      usub.textContent = b.url;
+      main.appendChild(usub);
     }
 
     const act = document.createElement("div");
