@@ -115,6 +115,17 @@ button:hover { border-color: var(--accent); }
 .folder-row.active .folder-add { color: var(--on-accent); }
 .folder-row .tree-node { flex: 1; }
 .folder-row .tree-node:hover { background: transparent; }  /* row handles hover */
+.folder-caret {
+  flex: none;
+  width: 1.1rem;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  color: var(--muted);
+  font-size: .8em;
+}
+.folder-caret.leaf { cursor: default; }
+.folder-row.active .folder-caret { color: var(--on-accent); }
 .folder-add {
   border: none;
   background: transparent;
@@ -180,6 +191,10 @@ button:hover { border-color: var(--accent); }
 }
 #table th { color: var(--muted); font-weight: 600; }
 #table td.folder { color: var(--muted); }
+#table tbody tr { cursor: pointer; }
+#table tbody tr:hover { background: var(--surface-2); }   /* soft hover highlight */
+/* hide the Folder column when viewing a single folder (redundant there) */
+#table.hide-folder th:nth-child(2), #table.hide-folder td:nth-child(2) { display: none; }
 #table td a { color: var(--accent); }
 .row-actions { display: flex; gap: .4rem; white-space: nowrap; }
 .row-actions button { padding: .2rem .5rem; font-size: .85em; }
