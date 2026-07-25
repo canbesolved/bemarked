@@ -243,13 +243,27 @@ button:hover { border-color: var(--accent); }
   display: flex;
   align-items: center;
   gap: .75rem;
-  padding: .5rem .7rem;
+  padding: .25rem .7rem;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface);
   cursor: pointer;
 }
 .bm-item:hover { background: var(--surface-2); }   /* soft hover highlight */
+.bm-caret {
+  flex: none;
+  align-self: stretch;                       /* full row height */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;                   /* arrow centered in the click area */
+  width: 2.4em;                              /* bigger, easier to hit */
+  margin: -.25rem 0 -.25rem -.7rem;           /* extend over item padding to the left edge */
+  border-right: 1px solid var(--border);      /* vertical separator before the name */
+  border-radius: 10px 0 0 10px;
+  cursor: pointer;
+  color: var(--muted);
+}
+.bm-caret:hover { background: #8882; }        /* show the enlarged target */
 .bm-main { flex: 1; min-width: 0; }
 .bm-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bm-sub {                                            /* folder path, search mode only */
