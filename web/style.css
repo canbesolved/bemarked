@@ -243,6 +243,7 @@ button:hover { border-color: var(--accent); }
   display: flex;
   align-items: center;
   gap: .75rem;
+  min-height: 2.25rem;      /* uniform row height (bookmarks & subfolders) */
   padding: .25rem .7rem;
   border: 1px solid var(--border);
   border-radius: 10px;
