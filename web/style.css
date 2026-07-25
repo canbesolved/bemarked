@@ -117,15 +117,33 @@ button:hover { border-color: var(--accent); }
 .folder-row .tree-node:hover { background: transparent; }  /* row handles hover */
 .folder-caret {
   flex: none;
-  width: 1.1rem;
-  text-align: center;
+  width: 1.2em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   user-select: none;
   color: var(--muted);
-  font-size: .8em;
 }
 .folder-caret.leaf { cursor: default; }
 .folder-row.active .folder-caret { color: var(--on-accent); }
+
+/* Masked SVG icons: filled with currentColor so they follow text color
+   (muted carets, on-accent on the active row, light in dark theme). */
+.ic {
+  display: inline-block;
+  width: 1em;
+  height: 1em;                    /* equal to the font size */
+  vertical-align: -0.15em;
+  background-color: currentColor;
+  -webkit-mask: var(--i) no-repeat center / contain;
+  mask: var(--i) no-repeat center / contain;
+}
+.ic-folder { --i: url("/assets/folder_icon.svg"); }
+/* arrows 30% smaller than the font height */
+.ic-arrow { --i: url("/assets/arrow_icon.svg"); width: .7em; height: .7em; }
+.ic-arrow-down { --i: url("/assets/arrow_down_icon.svg"); width: .7em; height: .7em; }
+.tree-node .ic-folder { margin-right: .25em; }
 .folder-add {
   border: none;
   background: transparent;

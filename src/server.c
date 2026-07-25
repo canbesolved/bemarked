@@ -10,6 +10,9 @@
 #include "web_index_html.h"
 #include "web_style_css.h"
 #include "web_app_js.h"
+#include "folder_icon_svg.h"
+#include "arrow_icon_svg.h"
+#include "arrow_down_icon_svg.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -281,6 +284,18 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
     }
     if (is_get && mg_strcmp(hm->uri, mg_str("/app.js")) == 0) {
         serve_asset(c, "application/javascript; charset=utf-8", web_app_js, web_app_js_len);
+        return;
+    }
+    if (is_get && mg_strcmp(hm->uri, mg_str("/assets/folder_icon.svg")) == 0) {
+        serve_asset(c, "image/svg+xml", folder_icon_svg, folder_icon_svg_len);
+        return;
+    }
+    if (is_get && mg_strcmp(hm->uri, mg_str("/assets/arrow_icon.svg")) == 0) {
+        serve_asset(c, "image/svg+xml", arrow_icon_svg, arrow_icon_svg_len);
+        return;
+    }
+    if (is_get && mg_strcmp(hm->uri, mg_str("/assets/arrow_down_icon.svg")) == 0) {
+        serve_asset(c, "image/svg+xml", arrow_down_icon_svg, arrow_down_icon_svg_len);
         return;
     }
 
