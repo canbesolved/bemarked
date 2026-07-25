@@ -37,4 +37,7 @@ int config_delete_shortcut(struct config *c, int index);
 int config_update_shortcut(struct config *c, int index, const char *name,
                            const char *color, const char *url);
 
+/* Swap the two shortcuts at indices a and b (nothing else moves), then persist. */
+int config_swap_shortcut(struct config *c, int a, int b);
+
 #endif /* BMKD_CONFIG_H */

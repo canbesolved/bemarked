@@ -5,6 +5,7 @@
 const $ = (id) => document.getElementById(id);
 const state = { bookmarks: [], folder: "", query: "", expanded: new Set(), openItems: new Set() };
 let openInNewTab = true;   // set from config's link_open_mode
+let dragIndex = null;      // shortcut being dragged (for reorder)
 
 function openLink(url) {
   if (openInNewTab) window.open(url, "_blank", "noopener");
@@ -184,6 +185,33 @@ async function renderShortcuts() {
       menu.hidden = !wasHidden;
     };
     tile.append(kebab, menu);
+
+    // drag to reorder (native DnD) — a plain click still opens the link
+    a.draggable = false;
+    tile.draggable = true;
+    tile.ondragstart = (e) => {
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", String(i));
+      dragIndex = i;
+      tile.classList.add("dragging");
+    };
+    tile.ondragover = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; };
+    tile.ondragenter = (e) => {
+      e.preventDefault();
+      if (dragIndex !== null && dragIndex !== i) tile.classList.add("drop-target");
+    };
+    tile.ondragleave = () => tile.classList.remove("drop-target");
+    tile.ondrop = (e) => {
+      e.preventDefault();
+      tile.classList.remove("drop-target");
+      if (dragIndex !== null && dragIndex !== i) swapShortcuts(dragIndex, i);
+    };
+    tile.ondragend = () => {
+      tile.classList.remove("dragging");
+      document.querySelectorAll(".drop-target").forEach((t) => t.classList.remove("drop-target"));
+      dragIndex = null;
+    };
+
     el.appendChild(tile);
   });
 
@@ -206,6 +234,11 @@ async function deleteShortcut(index) {
   if (!confirm("Delete this shortcut?")) return;
   try { await api("DELETE", "/shortcuts/" + encodeURIComponent(index)); await renderShortcuts(); }
   catch (err) { alert("Delete failed: " + err.message); }
+}
+
+async function swapShortcuts(a, b) {
+  try { await api("POST", "/shortcuts/swap", { a, b }); await renderShortcuts(); }
+  catch (err) { alert("Swap failed: " + err.message); }
 }
 
 // --- new/edit-shortcut popup ---

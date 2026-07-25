@@ -250,8 +250,10 @@ button:hover { border-color: var(--accent); }
   max-width: 100%;
 }
 
-/* per-shortcut options (⋮) menu, revealed on hover */
+/* per-shortcut options (⋯) menu, revealed on hover */
 .shortcut-tile { position: relative; }
+.shortcut-tile.dragging { opacity: .4; }
+.shortcut-tile.drop-target .shortcut { outline: 2px dashed var(--accent); outline-offset: -2px; }
 .kebab {
   position: absolute;
   right: 3px;

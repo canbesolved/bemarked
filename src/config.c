@@ -222,3 +222,14 @@ int config_update_shortcut(struct config *c, int index, const char *name,
     if (!s->name[0] || config_save(c) != 0) { *s = old; return -1; }
     return 0;
 }
+
+int config_swap_shortcut(struct config *c, int a, int b) {
+    struct shortcut tmp;
+    if (a < 0 || a >= c->shortcut_count) return -1;
+    if (b < 0 || b >= c->shortcut_count) return -1;
+    if (a == b) return 0;
+    tmp = c->shortcuts[a];
+    c->shortcuts[a] = c->shortcuts[b];
+    c->shortcuts[b] = tmp;
+    return config_save(c);
+}

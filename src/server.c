@@ -349,6 +349,13 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
         reply_err(c, 405, "method not allowed");
         return;
     }
+    if (is_post && mg_strcmp(hm->uri, mg_str("/shortcuts/swap")) == 0) {
+        long a = mg_json_get_long(hm->body, "$.a", -1);
+        long b = mg_json_get_long(hm->body, "$.b", -1);
+        if (config_swap_shortcut(srv->cfg, (int)a, (int)b) != 0) { reply_err(c, 400, "bad swap"); return; }
+        shortcuts_list(c, srv->cfg);
+        return;
+    }
     if (mg_match(hm->uri, mg_str("/shortcuts/*"), caps)) {
         char idx[16];
         snprintf(idx, sizeof(idx), "%.*s", (int)caps[0].len, caps[0].buf);
