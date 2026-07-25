@@ -165,11 +165,13 @@ function renderRows() {
     url.appendChild(a);
     const act = document.createElement("td");
     act.className = "row-actions";
+    const copy = document.createElement("button"); copy.textContent = "Copy link";
+    copy.onclick = (e) => { e.stopPropagation(); copyLink(b.url, copy); };
     const edit = document.createElement("button"); edit.textContent = "Edit";
     edit.onclick = (e) => { e.stopPropagation(); openForm(b); };
     const del = document.createElement("button"); del.textContent = "Delete";
     del.onclick = (e) => { e.stopPropagation(); removeBookmark(b.id); };
-    act.append(edit, del);
+    act.append(copy, edit, del);
     tr.append(name, folder, url, act);
     rows.appendChild(tr);
   }
@@ -219,6 +221,25 @@ async function submitForm(e) {
     closeForm();
     await load();
   } catch (err) { alert("Save failed: " + err.message); }
+}
+
+async function copyLink(url, btn) {
+  const flash = () => {
+    const prev = btn.textContent;
+    btn.textContent = "Copied!";
+    setTimeout(() => { btn.textContent = prev; }, 1200);
+  };
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(url);
+    } else {                               // fallback for non-secure (LAN http) contexts
+      const ta = document.createElement("textarea");
+      ta.value = url; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      document.execCommand("copy"); ta.remove();
+    }
+    flash();
+  } catch { alert("Copy failed"); }
 }
 
 async function removeBookmark(id) {
