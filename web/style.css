@@ -54,11 +54,26 @@ body {
   margin: 0;
   font: 14px/1.45 system-ui, sans-serif;
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: var(--side-w, 260px) 1fr;   /* --side-w set/persisted by app.js */
   height: 100vh;
   background: var(--bg);
   color: var(--text);
 }
+body.resizing { user-select: none; cursor: col-resize; }
+
+/* draggable divider between sidebar and main (desktop only) */
+#resizer {
+  position: fixed;
+  top: 0;
+  left: var(--side-w, 260px);
+  width: 6px;
+  height: 100vh;
+  margin-left: -3px;
+  cursor: col-resize;
+  touch-action: none;   /* don't scroll/zoom while dragging on touch */
+  z-index: 40;
+}
+#resizer:hover, body.resizing #resizer { background: var(--accent); opacity: .5; }
 
 /* --- sidebar --- */
 #side {
@@ -263,6 +278,7 @@ button:hover { border-color: var(--accent); }
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
   }
+  #resizer { display: none; }   /* sidebar is a drawer on mobile */
 
   #topbar {
     grid-column: 1;

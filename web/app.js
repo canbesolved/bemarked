@@ -250,6 +250,41 @@ function closeNav() { document.body.classList.remove("nav-open"); }
 $("navToggle").onclick = () => document.body.classList.toggle("nav-open");
 $("navBackdrop").onclick = closeNav;
 
+// --- resizable sidebar (desktop): mouse / touch / pen via Pointer Events ---
+const SIDE_MIN = 180, SIDE_MAX = 480, SIDE_DEFAULT = 260;
+function setSideWidth(px) {
+  px = Math.max(SIDE_MIN, Math.min(SIDE_MAX, Math.round(px)));
+  document.documentElement.style.setProperty("--side-w", px + "px");
+  return px;
+}
+(function initSidebar() {
+  const resizer = $("resizer");
+  const saved = parseInt(localStorage.getItem("bmkd-side-w"), 10);
+  if (saved) setSideWidth(saved);
+
+  resizer.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    resizer.setPointerCapture(e.pointerId);   // keep receiving moves outside the handle
+    document.body.classList.add("resizing");
+    const onMove = (ev) => setSideWidth(ev.clientX);   // sidebar starts at x=0
+    const onUp = (ev) => {
+      localStorage.setItem("bmkd-side-w", setSideWidth(ev.clientX));
+      document.body.classList.remove("resizing");
+      resizer.removeEventListener("pointermove", onMove);
+      resizer.removeEventListener("pointerup", onUp);
+      resizer.removeEventListener("pointercancel", onUp);
+    };
+    resizer.addEventListener("pointermove", onMove);
+    resizer.addEventListener("pointerup", onUp);
+    resizer.addEventListener("pointercancel", onUp);
+  });
+
+  // double-click / double-tap the divider to reset to the default width
+  resizer.addEventListener("dblclick", () => {
+    localStorage.setItem("bmkd-side-w", setSideWidth(SIDE_DEFAULT));
+  });
+})();
+
 // --- wire up ---
 $("allBookmarks").onclick = () => { state.folder = ""; state.query = ""; $("search").value = ""; closeNav(); render(); };
 $("search").oninput = (e) => { state.query = e.target.value; render(); };
