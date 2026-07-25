@@ -50,6 +50,8 @@ void model_sanitize(struct bookmark *b) {
     strip_control(b->folder);
     strip_control(b->url);
     normalize_folder(b->folder);
+    if (b->folder[0] == '\0')            /* no folder -> default so it shows in the tree */
+        strcpy(b->folder, "unsorted");
 }
 
 static int is_http_url(const char *u) {
