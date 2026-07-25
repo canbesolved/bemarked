@@ -3,7 +3,7 @@
 // Thin client: renders + navigates; the backend is authoritative for data/search.
 
 const $ = (id) => document.getElementById(id);
-const state = { bookmarks: [], folder: "", query: "" };
+const state = { bookmarks: [], folder: "", query: "", expanded: new Set() };
 
 // --- data ---
 async function api(method, path, body) {
@@ -30,23 +30,47 @@ function folderSet() {
   return [...set].sort();
 }
 
-function renderTree() {
-  const filter = $("folderFilter").value.toLowerCase();
-  const tree = $("folderTree");
-  tree.textContent = "";
-  $("allBookmarks").classList.toggle("active", state.folder === "");
-  for (const path of folderSet()) {
-    if (filter && !path.toLowerCase().includes(filter)) continue;
-    const depth = path.split("/").length - 1;
+// Build a nested {name: {path, children}} tree from all folder paths.
+function buildFolderTree() {
+  const root = {};
+  for (const p of folderSet()) {
+    let map = root, acc = "";
+    for (const part of p.split("/")) {
+      acc = acc ? acc + "/" + part : part;
+      if (!map[part]) map[part] = { path: acc, children: {} };
+      map = map[part].children;
+    }
+  }
+  return root;
+}
+
+function renderTreeInto(map, container, depth) {
+  for (const name of Object.keys(map).sort()) {
+    const node = map[name];
+    const path = node.path;
+    const hasKids = Object.keys(node.children).length > 0;
     const active = state.folder === path;
+    const expanded = state.expanded.has(path);
 
     const row = document.createElement("div");
     row.className = "folder-row" + (active ? " active" : "");
+    row.style.paddingLeft = 0.25 + depth * 0.85 + "rem";
+
+    const caret = document.createElement("span");
+    caret.className = "folder-caret" + (hasKids ? "" : " leaf");
+    if (hasKids) {
+      caret.textContent = expanded ? "▾" : "▸";
+      caret.onclick = (e) => {
+        e.stopPropagation();
+        if (expanded) state.expanded.delete(path); else state.expanded.add(path);
+        renderTree();
+      };
+    }
+    row.appendChild(caret);
 
     const btn = document.createElement("button");
     btn.className = "tree-node";
-    btn.style.paddingLeft = 0.5 + depth * 0.9 + "rem";
-    btn.textContent = path.split("/").pop();
+    btn.textContent = "📁 " + name;
     btn.title = path;
     btn.onclick = () => { state.folder = path; state.query = ""; $("search").value = ""; closeNav(); render(); };
     row.appendChild(btn);
@@ -59,8 +83,17 @@ function renderTree() {
       add.onclick = (e) => { e.stopPropagation(); openForm(null, path); };
       row.appendChild(add);
     }
-    tree.appendChild(row);
+    container.appendChild(row);
+
+    if (hasKids && expanded) renderTreeInto(node.children, container, depth + 1);
   }
+}
+
+function renderTree() {
+  const tree = $("folderTree");
+  tree.textContent = "";
+  $("allBookmarks").classList.toggle("active", state.folder === "");
+  renderTreeInto(buildFolderTree(), tree, 0);
 }
 
 // Populate the folder autocomplete datalist used by the new/edit form.
@@ -98,7 +131,7 @@ async function renderShortcuts() {
 function visible() {
   const q = state.query.toLowerCase();
   return state.bookmarks.filter((b) => {
-    if (state.folder && !(b.folder === state.folder || b.folder.startsWith(state.folder + "/"))) return false;
+    if (state.folder && b.folder !== state.folder) return false;   // this folder only, not subfolders
     if (q && !(`${b.name}\n${b.folder}\n${b.url}`.toLowerCase().includes(q))) return false;
     return true;
   });
@@ -110,22 +143,26 @@ function renderRows() {
   const list = visible();
   $("empty").hidden = list.length > 0;
   for (const b of list) {
+    const valid = /^https?:\/\//.test(b.url);
     const tr = document.createElement("tr");
+    if (valid) tr.onclick = () => window.open(b.url, "_blank", "noopener");  // whole row clickable
+
     const name = document.createElement("td");
     name.textContent = b.name;                    // textContent => no XSS
     const folder = document.createElement("td");
     folder.className = "folder"; folder.textContent = b.folder || "—";
     const url = document.createElement("td");
     const a = document.createElement("a");
-    a.href = /^https?:\/\//.test(b.url) ? b.url : "#";
+    a.href = valid ? b.url : "#";
     a.textContent = b.url; a.target = "_blank"; a.rel = "noopener noreferrer";
+    a.onclick = (e) => e.stopPropagation();       // avoid opening twice
     url.appendChild(a);
     const act = document.createElement("td");
     act.className = "row-actions";
     const edit = document.createElement("button"); edit.textContent = "Edit";
-    edit.onclick = () => openForm(b);
+    edit.onclick = (e) => { e.stopPropagation(); openForm(b); };
     const del = document.createElement("button"); del.textContent = "Delete";
-    del.onclick = () => removeBookmark(b.id);
+    del.onclick = (e) => { e.stopPropagation(); removeBookmark(b.id); };
     act.append(edit, del);
     tr.append(name, folder, url, act);
     rows.appendChild(tr);
@@ -145,6 +182,7 @@ function render() {
   $("searchWrap").hidden = folderView;   // hide search when viewing a folder
   $("shortcuts").hidden = browsing;
   $("table").hidden = !browsing;
+  $("table").classList.toggle("hide-folder", folderView);  // Folder column redundant in folder view
   $("empty").hidden = true;
   if (browsing) renderRows();
 }
@@ -209,7 +247,6 @@ $("navBackdrop").onclick = closeNav;
 
 // --- wire up ---
 $("allBookmarks").onclick = () => { state.folder = ""; state.query = ""; $("search").value = ""; closeNav(); render(); };
-$("folderFilter").oninput = renderTree;
 $("search").oninput = (e) => { state.query = e.target.value; render(); };
 $("newBtn").onclick = () => openForm(null);
 $("cancelBtn").onclick = closeForm;
