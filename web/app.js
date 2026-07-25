@@ -138,7 +138,7 @@ async function renderShortcuts() {
   if (cfg) openInNewTab = cfg.link_open_mode !== "same-tab";
   const el = $("shortcuts");
   el.textContent = "";
-  el.style.setProperty("--cols", (cfg && cfg.shortcuts_per_row) || 4);
+  el.style.setProperty("--cols", (cfg && cfg.shortcuts_per_row) || 7);
   for (const s of (cfg && cfg.shortcuts) || []) {
     const a = document.createElement("a");
     a.className = "shortcut";
