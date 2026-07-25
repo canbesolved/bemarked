@@ -143,27 +143,32 @@ function visible() {
 }
 
 function renderRows() {
-  const rows = $("rows");
-  rows.textContent = "";
+  const box = $("list");
+  box.textContent = "";
   const list = visible();
-  $("table").hidden = list.length === 0;   // hide the columns when there are no bookmarks
+  $("list").hidden = list.length === 0;    // hide the list when there are no bookmarks
   $("empty").hidden = list.length > 0;
+  const searchMode = !state.folder && !!state.query;   // results span folders -> show folder
   for (const b of list) {
     const valid = /^https?:\/\//.test(b.url);
-    const tr = document.createElement("tr");
-    if (valid) tr.onclick = () => window.open(b.url, "_blank", "noopener");  // whole row clickable
+    const item = document.createElement("div");
+    item.className = "bm-item";
+    if (valid) item.onclick = () => window.open(b.url, "_blank", "noopener");  // whole item clickable
 
-    const name = document.createElement("td");
+    const main = document.createElement("div");
+    main.className = "bm-main";
+    const name = document.createElement("div");
+    name.className = "bm-name";
     name.textContent = b.name;                    // textContent => no XSS
-    const folder = document.createElement("td");
-    folder.className = "folder"; folder.textContent = b.folder || "—";
-    const url = document.createElement("td");
-    const a = document.createElement("a");
-    a.href = valid ? b.url : "#";
-    a.textContent = b.url; a.target = "_blank"; a.rel = "noopener noreferrer";
-    a.onclick = (e) => e.stopPropagation();       // avoid opening twice
-    url.appendChild(a);
-    const act = document.createElement("td");
+    main.appendChild(name);
+    if (searchMode && b.folder) {
+      const sub = document.createElement("div");
+      sub.className = "bm-sub";
+      sub.textContent = b.folder;
+      main.appendChild(sub);
+    }
+
+    const act = document.createElement("div");
     act.className = "row-actions";
     const copy = document.createElement("button"); copy.textContent = "Copy link";
     copy.onclick = (e) => { e.stopPropagation(); copyLink(b.url, copy); };
@@ -172,8 +177,9 @@ function renderRows() {
     const del = document.createElement("button"); del.textContent = "Delete";
     del.onclick = (e) => { e.stopPropagation(); removeBookmark(b.id); };
     act.append(copy, edit, del);
-    tr.append(name, folder, url, act);
-    rows.appendChild(tr);
+
+    item.append(main, act);
+    box.appendChild(item);
   }
 }
 
@@ -189,11 +195,10 @@ function render() {
   $("main").classList.toggle("browsing", browsing);
   $("searchWrap").hidden = folderView;   // hide search when viewing a folder
   $("shortcuts").hidden = browsing;
-  $("table").classList.toggle("hide-folder", folderView);  // Folder column redundant in folder view
   if (browsing) {
-    renderRows();   // toggles table/empty visibility based on results
+    renderRows();   // toggles list/empty visibility based on results
   } else {
-    $("table").hidden = true;
+    $("list").hidden = true;
     $("empty").hidden = true;
   }
 }
