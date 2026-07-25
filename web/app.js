@@ -97,7 +97,7 @@ function renderTreeInto(map, container, depth) {
 function renderTree() {
   const tree = $("folderTree");
   tree.textContent = "";
-  $("allBookmarks").classList.toggle("active", state.folder === "");
+  $("homepage").classList.toggle("active", state.folder === "");
   renderTreeInto(buildFolderTree(), tree, 0);
 }
 
@@ -311,7 +311,7 @@ function setSideWidth(px) {
 })();
 
 // --- wire up ---
-$("allBookmarks").onclick = () => { state.folder = ""; state.query = ""; $("search").value = ""; closeNav(); render(); };
+$("homepage").onclick = () => { state.folder = ""; state.query = ""; $("search").value = ""; closeNav(); render(); };
 $("search").oninput = (e) => { state.query = e.target.value; render(); };
 $("newBtn").onclick = () => openForm(null);
 $("cancelBtn").onclick = closeForm;
