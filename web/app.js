@@ -146,6 +146,7 @@ function renderRows() {
   const rows = $("rows");
   rows.textContent = "";
   const list = visible();
+  $("table").hidden = list.length === 0;   // hide the columns when there are no bookmarks
   $("empty").hidden = list.length > 0;
   for (const b of list) {
     const valid = /^https?:\/\//.test(b.url);
@@ -186,10 +187,13 @@ function render() {
   $("main").classList.toggle("browsing", browsing);
   $("searchWrap").hidden = folderView;   // hide search when viewing a folder
   $("shortcuts").hidden = browsing;
-  $("table").hidden = !browsing;
   $("table").classList.toggle("hide-folder", folderView);  // Folder column redundant in folder view
-  $("empty").hidden = true;
-  if (browsing) renderRows();
+  if (browsing) {
+    renderRows();   // toggles table/empty visibility based on results
+  } else {
+    $("table").hidden = true;
+    $("empty").hidden = true;
+  }
 }
 
 // --- add/edit form (overlay) ---
