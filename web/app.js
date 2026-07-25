@@ -30,6 +30,11 @@ function folderSet() {
   return [...set].sort();
 }
 
+// Immediate child folders of `parent` ("" = top level).
+function childFolders(parent) {
+  return folderSet().filter((p) => p.split("/").slice(0, -1).join("/") === parent);
+}
+
 // Build a nested {name: {path, children}} tree from all folder paths.
 function buildFolderTree() {
   const root = {};
@@ -145,11 +150,26 @@ function visible() {
 function renderRows() {
   const box = $("list");
   box.textContent = "";
-  const list = visible();
-  $("list").hidden = list.length === 0;    // hide the list when there are no bookmarks
-  $("empty").hidden = list.length > 0;
   const searchMode = !state.folder && !!state.query;   // results span folders -> show folder
   const folderView = !!state.folder;
+  const subfolders = folderView ? childFolders(state.folder) : [];
+  const list = visible();
+  $("list").hidden = subfolders.length + list.length === 0;
+  $("empty").hidden = subfolders.length + list.length > 0;
+
+  for (const path of subfolders) {   // subfolders first, then bookmarks
+    const item = document.createElement("div");
+    item.className = "bm-item folder-item";
+    item.onclick = () => { state.folder = path; render(); };   // navigate into subfolder
+    const fic = document.createElement("span");
+    fic.className = "ic ic-folder";
+    const nm = document.createElement("span");
+    nm.className = "bm-name";
+    nm.textContent = path.split("/").pop();
+    item.append(fic, nm);
+    box.appendChild(item);
+  }
+
   for (const b of list) {
     const valid = /^https?:\/\//.test(b.url);
     const item = document.createElement("div");
