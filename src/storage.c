@@ -116,6 +116,22 @@ struct storage *storage_open(const char *dir) {
     snprintf(s->bak,  sizeof(s->bak),  "%s/bookmarks.tsv.bak", dir);
     pthread_mutex_init(&s->lock, NULL);
     load(s);
+
+    /* migrate legacy rows with no folder -> "unsorted" so they show in the tree */
+    {
+        size_t i, fixed = 0;
+        for (i = 0; i < s->count; i++) {
+            if (s->items[i].folder[0] == '\0') {
+                strcpy(s->items[i].folder, "unsorted");
+                fixed++;
+            }
+        }
+        if (fixed > 0) {
+            flush_locked(s);  /* single-threaded at open time */
+            printf("bmkd: assigned 'unsorted' folder to %zu bookmark(s) that had none\n", fixed);
+            fflush(stdout);
+        }
+    }
     return s;
 }
 
