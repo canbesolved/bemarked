@@ -139,10 +139,16 @@ async function renderShortcuts() {
   const el = $("shortcuts");
   el.textContent = "";
   el.style.setProperty("--cols", (cfg && cfg.shortcuts_per_row) || 7);
-  for (const s of (cfg && cfg.shortcuts) || []) {
+  ((cfg && cfg.shortcuts) || []).forEach((s, i) => {
+    const tile = document.createElement("div");
+    tile.className = "shortcut-tile";
+
     const a = document.createElement("a");
     a.className = "shortcut";
-    a.textContent = s.name;
+    const label = document.createElement("span");
+    label.className = "shortcut-label";
+    label.textContent = s.name;
+    a.appendChild(label);
     a.href = /^https?:\/\//.test(s.url) ? s.url : "#";
     if (openInNewTab) { a.target = "_blank"; a.rel = "noopener noreferrer"; }  // else same tab
     const bg = /^#[0-9a-fA-F]{3,8}$/.test(s.color) ? s.color : "#666";
@@ -150,8 +156,37 @@ async function renderShortcuts() {
     const light = textOn(bg) === "#fff";
     a.style.color = light ? "#fff" : "#111";
     a.style.textShadow = light ? "0 1px 2px #0006" : "none";   // shadow only helps white text
-    el.appendChild(a);
-  }
+    tile.appendChild(a);
+
+    // kebab (⋮) options menu — appears on hover
+    const kebab = document.createElement("button");
+    kebab.className = "kebab";
+    kebab.title = "Options";
+    const dots = document.createElement("span");
+    dots.className = "dots";     // three CSS-drawn dots (centered by geometry)
+    kebab.appendChild(dots);
+    const menu = document.createElement("div");
+    menu.className = "kebab-menu";
+    menu.hidden = true;
+    menu.onclick = (e) => e.stopPropagation();
+    const editB = document.createElement("button");
+    editB.textContent = "Edit";
+    editB.onclick = () => { menu.hidden = true; openShortcutForm(s, i); };
+    const delB = document.createElement("button");
+    delB.className = "kebab-del";
+    delB.textContent = "Delete";
+    delB.onclick = () => { menu.hidden = true; deleteShortcut(i); };
+    menu.append(editB, delB);
+    kebab.onclick = (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const wasHidden = menu.hidden;
+      closeShortcutMenus();
+      menu.hidden = !wasHidden;
+    };
+    tile.append(kebab, menu);
+    el.appendChild(tile);
+  });
+
   // always-last "add shortcut" card
   const add = document.createElement("button");
   add.className = "shortcut shortcut-add";
@@ -159,16 +194,33 @@ async function renderShortcuts() {
   const ic = document.createElement("span");
   ic.className = "ic ic-add";
   add.appendChild(ic);
-  add.onclick = openShortcutForm;
+  add.onclick = () => openShortcutForm();
   el.appendChild(add);
 }
 
-// --- new-shortcut popup ---
-function openShortcutForm() {
+function closeShortcutMenus() {
+  document.querySelectorAll(".kebab-menu").forEach((m) => (m.hidden = true));
+}
+
+async function deleteShortcut(index) {
+  if (!confirm("Delete this shortcut?")) return;
+  try { await api("DELETE", "/shortcuts/" + encodeURIComponent(index)); await renderShortcuts(); }
+  catch (err) { alert("Delete failed: " + err.message); }
+}
+
+// --- new/edit-shortcut popup ---
+function openShortcutForm(sc, index) {
+  const editing = sc != null;
   $("shortcutForm").reset();
-  $("sc-color").value = "";
-  $("sc-color-picker").value = "#4285f4";
+  $("shortcutForm").dataset.index = editing ? index : "";
+  $("shortcutTitle").textContent = editing ? "Edit shortcut" : "New shortcut";
+  $("sc-name").value = editing ? sc.name : "";
+  $("sc-url").value = editing ? sc.url : "";
+  const color = editing && /^#[0-9a-fA-F]{6}$/.test(sc.color) ? sc.color : "";
+  $("sc-color").value = color;
+  $("sc-color-picker").value = color || "#4285f4";
   closeNav();
+  closeShortcutMenus();
   $("shortcutOverlay").hidden = false;
   $("sc-name").focus();
 }
@@ -176,16 +228,18 @@ function closeShortcutForm() { $("shortcutOverlay").hidden = true; $("shortcutFo
 
 async function submitShortcut(e) {
   e.preventDefault();
+  const idx = $("shortcutForm").dataset.index;
   const body = {
     name: $("sc-name").value,
     color: $("sc-color").value || $("sc-color-picker").value,
     url: $("sc-url").value,
   };
   try {
-    await api("POST", "/shortcuts", body);
+    if (idx !== "" && idx != null) await api("PUT", "/shortcuts/" + encodeURIComponent(idx), body);
+    else await api("POST", "/shortcuts", body);
     closeShortcutForm();
     await renderShortcuts();
-  } catch (err) { alert("Add failed: " + err.message); }
+  } catch (err) { alert("Save failed: " + err.message); }
 }
 
 // --- bookmark table (folder / search view) ---
@@ -433,8 +487,9 @@ $("sc-color").oninput = (e) => {
 $("sc-color-picker").oninput = (e) => { $("sc-color").value = e.target.value; };
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") { closeForm(); closeShortcutForm(); }
+  if (e.key === "Escape") { closeForm(); closeShortcutForm(); closeShortcutMenus(); }
 });
+document.addEventListener("click", closeShortcutMenus);   // click anywhere closes kebab menus
 
 renderShortcuts();
 load();

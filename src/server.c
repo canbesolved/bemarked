@@ -350,9 +350,19 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
         return;
     }
     if (mg_match(hm->uri, mg_str("/shortcuts/*"), caps)) {
+        char idx[16];
+        snprintf(idx, sizeof(idx), "%.*s", (int)caps[0].len, caps[0].buf);
+        if (is_put) {
+            char name[128], color[16], url[1024];
+            json_field(hm->body, "$.name", name, sizeof(name));
+            json_field(hm->body, "$.color", color, sizeof(color));
+            json_field(hm->body, "$.url", url, sizeof(url));
+            if (name[0] == '\0') { reply_err(c, 400, "name required"); return; }
+            if (config_update_shortcut(srv->cfg, atoi(idx), name, color, url) != 0) { reply_err(c, 404, "not found"); return; }
+            shortcuts_list(c, srv->cfg);
+            return;
+        }
         if (is_delete) {
-            char idx[16];
-            snprintf(idx, sizeof(idx), "%.*s", (int)caps[0].len, caps[0].buf);
             if (config_delete_shortcut(srv->cfg, atoi(idx)) != 0) { reply_err(c, 404, "not found"); return; }
             mg_http_reply(c, 200, JSON_HDRS, "{\"ok\":true}\n");
             return;

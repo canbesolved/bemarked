@@ -239,6 +239,80 @@ button:hover { border-color: var(--accent); }
 .shortcut:hover { transform: translateY(-2px); }
 #shortcuts[hidden] { display: none; }   /* ID rule above would otherwise beat [hidden] */
 
+/* shortcut name: wrap + break long words, clamp with ellipsis when it fills the card */
+.shortcut-label {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* per-shortcut options (⋮) menu, revealed on hover */
+.shortcut-tile { position: relative; }
+.kebab {
+  position: absolute;
+  right: 3px;
+  top: 3px;
+  width: 20px;
+  height: 20px;
+  padding: 0;                 /* override global button padding so ⋯ centers */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: #00000059;
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .1s;
+}
+/* three horizontal dots drawn with the box + two box-shadows, centered in the button */
+.kebab .dots,
+.kebab .dots::before,
+.kebab .dots::after {
+  content: "";
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.kebab .dots { position: relative; }
+.kebab .dots::before,
+.kebab .dots::after { position: absolute; top: 0; }
+.kebab .dots::before { left: -5px; }
+.kebab .dots::after { left: 5px; }
+.shortcut-tile:hover .kebab { opacity: 1; }
+.kebab:hover { background: #000000a6; }
+@media (hover: none) { .kebab { opacity: .85; } }   /* touch: no hover, keep visible */
+
+.kebab-menu {
+  position: absolute;
+  right: 2px;
+  top: 26px;                    /* just below the kebab */
+  z-index: 30;
+  min-width: 96px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px #0005;
+  overflow: hidden;
+}
+.kebab-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: .4rem .7rem;
+}
+.kebab-menu button:hover { background: var(--surface-2); }
+.kebab-del { color: var(--danger); }
+
 /* --- bookmark list (folder / search view): name + action buttons --- */
 #list { display: flex; flex-direction: column; gap: .35rem; }
 #list[hidden] { display: none; }   /* ID rule above would otherwise beat [hidden] */
