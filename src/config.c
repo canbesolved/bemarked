@@ -15,7 +15,7 @@ static void defaults(struct config *c) {
     snprintf(c->bind, sizeof(c->bind), "127.0.0.1");
     snprintf(c->bookmarks_dir, sizeof(c->bookmarks_dir), "./data");
     c->tray_icon = 1;
-    c->shortcuts_per_row = 4;
+    c->shortcuts_per_row = 7;
     snprintf(c->link_open_mode, sizeof(c->link_open_mode), "new-tab");
 }
 

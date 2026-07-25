@@ -208,11 +208,14 @@ button:hover { border-color: var(--accent); }
 
 /* --- shortcuts: small square cards --- */
 #shortcuts {
-  margin: 0 auto;
-  display: grid;
+  margin: 0 auto;              /* block stays centered … */
+  width: fit-content;          /* … while shrink-wrapping the cards */
+  display: flex;
+  flex-wrap: wrap;
   gap: .5rem;
-  justify-content: center;
-  grid-template-columns: repeat(var(--cols, 4), 80px);   /* --cols set by app.js */
+  justify-content: flex-start; /* a partial last row aligns to the left */
+  /* up to shortcuts_per_row (--cols) 80px cards + gaps; wraps to fewer as width shrinks */
+  max-width: calc(var(--cols, 7) * 88px - 8px);
 }
 .shortcut {
   width: 80px;
@@ -389,7 +392,6 @@ button:hover { border-color: var(--accent); }
 
   .search-wrap { margin: 12vh auto 1.25rem; }              /* less top gap on phones */
   #main.browsing .search-wrap { margin: .5rem auto 1rem; }
-  #shortcuts { grid-template-columns: repeat(auto-fill, 80px); }  /* wrap to fit */
 
   #overlay { padding-top: 8vh; }
 }
