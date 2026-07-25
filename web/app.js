@@ -4,6 +4,12 @@
 
 const $ = (id) => document.getElementById(id);
 const state = { bookmarks: [], folder: "", query: "", expanded: new Set(), openItems: new Set() };
+let openInNewTab = true;   // set from config's link_open_mode
+
+function openLink(url) {
+  if (openInNewTab) window.open(url, "_blank", "noopener");
+  else window.location.href = url;   // same tab
+}
 
 // --- data ---
 async function api(method, path, body) {
@@ -120,6 +126,7 @@ function renderFolderOptions() {
 // --- shortcuts (small square cards) ---
 async function renderShortcuts() {
   const cfg = await api("GET", "/config/public").catch(() => null);
+  if (cfg) openInNewTab = cfg.link_open_mode !== "same-tab";
   const el = $("shortcuts");
   el.textContent = "";
   if (!cfg || !cfg.shortcuts.length) return;
@@ -130,8 +137,7 @@ async function renderShortcuts() {
     a.className = "shortcut";
     a.textContent = s.name;
     a.href = /^https?:\/\//.test(s.url) ? s.url : "#";
-    a.target = "_blank";                 // open in a new tab
-    a.rel = "noopener noreferrer";
+    if (openInNewTab) { a.target = "_blank"; a.rel = "noopener noreferrer"; }  // else same tab
     a.style.background = /^#[0-9a-fA-F]{3,8}$/.test(s.color) ? s.color : "#666";
     el.appendChild(a);
   }
@@ -174,7 +180,7 @@ function renderRows() {
     const valid = /^https?:\/\//.test(b.url);
     const item = document.createElement("div");
     item.className = "bm-item";
-    if (valid) item.onclick = () => window.open(b.url, "_blank", "noopener");  // whole item clickable
+    if (valid) item.onclick = () => openLink(b.url);   // whole item clickable (mode from config)
 
     if (folderView) {   // expand caret -> reveals the url as subtext
       const open = state.openItems.has(b.id);

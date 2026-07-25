@@ -16,6 +16,7 @@ static void defaults(struct config *c) {
     c->tray_icon = 1;
     c->shortcuts_on_row = 4;
     c->rows = 3;
+    snprintf(c->link_open_mode, sizeof(c->link_open_mode), "new-tab");
 }
 
 /* Trim leading/trailing ASCII whitespace in place, return pointer to start. */
@@ -92,6 +93,8 @@ int config_load(const char *path, struct config *out) {
             out->shortcuts_on_row = atoi(val);
         } else if (strcmp(key, "rows") == 0) {
             out->rows = atoi(val);
+        } else if (strcmp(key, "link_open_mode") == 0) {
+            snprintf(out->link_open_mode, sizeof(out->link_open_mode), "%s", val);
         } else if (strncmp(key, "shortcut[", 9) == 0) {
             int idx = atoi(key + 9);
             if (idx >= 0 && idx < BMKD_MAX_SHORTCUTS) {

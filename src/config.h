@@ -19,6 +19,7 @@ struct config {
     int  tray_icon;         /* 1 = enable, 0 = disable */
     int  shortcuts_on_row;
     int  rows;
+    char link_open_mode[16];  /* "new-tab" (default) | "same-tab" */
     struct shortcut shortcuts[BMKD_MAX_SHORTCUTS];
     int  shortcut_count;
 };

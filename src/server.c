@@ -233,7 +233,9 @@ static void config_public(struct mg_connection *c, const struct config *cfg) {
     snprintf(num, sizeof(num), "%d", cfg->shortcuts_on_row); sb_str(&s, num);
     sb_str(&s, ",\"rows\":");
     snprintf(num, sizeof(num), "%d", cfg->rows); sb_str(&s, num);
-    sb_str(&s, ",\"shortcuts\":[");
+    sb_str(&s, ",\"link_open_mode\":\"");
+    sb_json(&s, cfg->link_open_mode);
+    sb_str(&s, "\",\"shortcuts\":[");
     for (i = 0; i < cfg->shortcut_count; i++) {
         const struct shortcut *sc = &cfg->shortcuts[i];
         if (sc->name[0] == '\0') continue;
