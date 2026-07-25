@@ -83,8 +83,27 @@ body.resizing { user-select: none; cursor: col-resize; }
   -webkit-overflow-scrolling: touch;    /* momentum scrolling on touch */
   padding: .75rem;
 }
-.side-head { display: flex; align-items: center; justify-content: space-between; }
-.side-head h1 { font-size: 1.1rem; margin: .2rem 0 .8rem; }
+.side-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  padding-bottom: .6rem;
+  margin-bottom: .6rem;
+  border-bottom: 1px solid var(--border);   /* separator under the header */
+}
+.side-head h1 { font-size: 1.1rem; margin: 0; }
+.side-head-actions { display: flex; align-items: center; gap: .4rem; }
+.btn-add {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+  padding: .3rem .6rem;
+  font-size: .85em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.btn-add:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 
 input, button {
   font: inherit;
@@ -119,7 +138,6 @@ button:hover { border-color: var(--accent); }
 }
 .tree-node:hover { background: var(--surface-2); }
 .tree-node.active { background: var(--accent); color: var(--on-accent); }
-.new-btn { color: var(--accent); margin-bottom: .5rem; }
 
 /* folder rows: label + a '+' button (shown on the selected folder) */
 .folder-row {
