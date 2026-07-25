@@ -79,7 +79,8 @@ body.resizing { user-select: none; cursor: col-resize; }
 #side {
   border-right: 1px solid var(--border);
   background: var(--surface);
-  overflow: auto;
+  overflow: auto;                       /* vertical + horizontal scroll (long folder names) */
+  -webkit-overflow-scrolling: touch;    /* momentum scrolling on touch */
   padding: .75rem;
 }
 .side-head { display: flex; align-items: center; justify-content: space-between; }
@@ -114,16 +115,20 @@ button:hover { border-color: var(--accent); }
   background: transparent;
   padding: .35rem .5rem;
   border-radius: 8px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap;   /* long names overflow -> sidebar scrolls horizontally */
 }
 .tree-node:hover { background: var(--surface-2); }
 .tree-node.active { background: var(--accent); color: var(--on-accent); }
 .new-btn { color: var(--accent); margin-bottom: .5rem; }
 
 /* folder rows: label + a '+' button (shown on the selected folder) */
-.folder-row { display: flex; align-items: center; border-radius: 8px; }
+.folder-row {
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  width: max-content;    /* grow past the sidebar when names are long */
+  min-width: 100%;       /* but fill the width so the highlight spans it */
+}
 .folder-row:hover { background: var(--surface-2); }
 .folder-row.active { background: var(--accent); }
 .folder-row.active .tree-node,
