@@ -252,7 +252,7 @@ button:hover { border-color: var(--accent); }
 /* hide the Folder column when viewing a single folder (redundant there) */
 #table.hide-folder th:nth-child(2), #table.hide-folder td:nth-child(2) { display: none; }
 #table td a { color: var(--accent); }
-.row-actions { display: flex; gap: .4rem; white-space: nowrap; }
+.row-actions { display: flex; gap: .4rem; white-space: nowrap; justify-content: flex-end; }
 .row-actions button { padding: .2rem .5rem; font-size: .85em; }
 .row-actions button:last-child { color: var(--danger); }
 
