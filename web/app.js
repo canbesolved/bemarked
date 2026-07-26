@@ -597,6 +597,28 @@ function closeNav() { document.body.classList.remove("nav-open"); }
 $("navToggle").onclick = () => document.body.classList.toggle("nav-open");
 $("navBackdrop").onclick = closeNav;
 
+// edge-swipe: drag right from the left edge to open the drawer, left to close (mobile)
+(function () {
+  const EDGE = 28, DIST = 45;
+  let x0 = 0, y0 = 0, track = false;
+  addEventListener("touchstart", (e) => {
+    if (window.innerWidth > 768) { track = false; return; }
+    const t = e.touches[0];
+    track = document.body.classList.contains("nav-open") || t.clientX <= EDGE;
+    x0 = t.clientX; y0 = t.clientY;
+  }, { passive: true });
+  addEventListener("touchmove", (e) => {
+    if (!track) return;
+    const t = e.touches[0], dx = t.clientX - x0, dy = t.clientY - y0;
+    if (Math.abs(dx) < DIST || Math.abs(dy) > Math.abs(dx)) return;   // need a clear horizontal swipe
+    const open = document.body.classList.contains("nav-open");
+    if (dx > 0 && !open) document.body.classList.add("nav-open");
+    else if (dx < 0 && open) closeNav();
+    track = false;
+  }, { passive: true });
+  addEventListener("touchend", () => { track = false; });
+})();
+
 // --- resizable sidebar (desktop): mouse / touch / pen via Pointer Events ---
 const SIDE_MIN = 180, SIDE_MAX = 480, SIDE_DEFAULT = 260;
 function setSideWidth(px) {

@@ -50,6 +50,7 @@
 
 * { box-sizing: border-box; }
 
+html { overscroll-behavior-x: none; }   /* stop Chrome's horizontal swipe-to-go-back */
 body {
   margin: 0;
   font: 14px/1.45 system-ui, sans-serif;
@@ -58,6 +59,7 @@ body {
   height: 100vh;
   background: var(--bg);
   color: var(--text);
+  overscroll-behavior-x: none;
 }
 body.resizing { user-select: none; cursor: col-resize; }
 
