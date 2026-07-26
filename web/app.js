@@ -6,6 +6,25 @@ const $ = (id) => document.getElementById(id);
 const state = { bookmarks: [], folder: "", query: "", expanded: new Set(), openItems: new Set() };
 let openInNewTab = true;   // set from config's link_open_mode
 let dragIndex = null;      // shortcut being dragged (for reorder)
+let draggedFolder = null;  // folder path being dragged (for reparent)
+let draggedBookmark = null; // bookmark being dragged (to move into a folder)
+let hoverFolder = null, hoverTimer = null;   // spring-load: auto-expand on hover
+
+// While dragging, hovering a collapsed folder with children expands it after 1s.
+function springLoad(path, hasKids, expanded) {
+  if (path === hoverFolder) return;   // same folder: timer already running
+  hoverFolder = path;
+  clearTimeout(hoverTimer);
+  hoverTimer = null;
+  if (hasKids && !expanded) {
+    hoverTimer = setTimeout(() => {
+      hoverTimer = null;
+      state.expanded.add(path);
+      renderTree();
+    }, 750);
+  }
+}
+function cancelSpring() { clearTimeout(hoverTimer); hoverTimer = null; hoverFolder = null; }
 
 function openLink(url) {
   if (openInNewTab) window.open(url, "_blank", "noopener");
@@ -37,27 +56,42 @@ function folderSet() {
   return [...set].sort();
 }
 
-// Immediate child folders of `parent` ("" = top level).
-function childFolders(parent) {
-  return folderSet().filter((p) => p.split("/").slice(0, -1).join("/") === parent);
-}
-
-// Build a nested {name: {path, children}} tree from all folder paths.
+// Build a nested {name: {path, children, order}} tree. `order` = the file index
+// of the folder's first bookmark, so folders keep their manual (file) order.
 function buildFolderTree() {
   const root = {};
-  for (const p of folderSet()) {
+  state.bookmarks.forEach((b, idx) => {
+    if (!b.folder) return;
     let map = root, acc = "";
-    for (const part of p.split("/")) {
+    for (const part of b.folder.split("/")) {
       acc = acc ? acc + "/" + part : part;
-      if (!map[part]) map[part] = { path: acc, children: {} };
+      if (!map[part]) map[part] = { path: acc, children: {}, order: idx };
+      else if (idx < map[part].order) map[part].order = idx;
       map = map[part].children;
     }
-  }
+  });
   return root;
 }
 
+// Sorted child names of a folder node, in manual (file) order.
+function orderedNames(map) {
+  return Object.keys(map).sort((a, b) => map[a].order - map[b].order);
+}
+
+// Immediate child folder paths of `parent` ("" = top level), in manual order.
+function childFolders(parent) {
+  let map = buildFolderTree();
+  if (parent) {
+    for (const part of parent.split("/")) {
+      if (!map[part]) return [];
+      map = map[part].children;
+    }
+  }
+  return orderedNames(map).map((k) => map[k].path);
+}
+
 function renderTreeInto(map, container, depth) {
-  for (const name of Object.keys(map).sort()) {
+  for (const name of orderedNames(map)) {
     const node = map[name];
     const path = node.path;
     const hasKids = Object.keys(node.children).length > 0;
@@ -100,10 +134,95 @@ function renderTreeInto(map, container, depth) {
       add.onclick = (e) => { e.stopPropagation(); openForm(null, path); };
       row.appendChild(add);
     }
+
+    // drag to reparent (native DnD); separator/highlight shows the drop position
+    row.draggable = true;
+    row.ondragstart = (e) => {
+      e.stopPropagation();
+      draggedFolder = path;
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", path);
+      row.classList.add("dragging");
+    };
+    row.ondragend = () => { row.classList.remove("dragging"); clearFolderMarks(); cancelSpring(); draggedFolder = null; };
+    row.ondragover = (e) => {
+      if (draggedBookmark) {                 // dropping a bookmark INTO this folder
+        springLoad(path, hasKids, expanded);
+        if (draggedBookmark.folder === path) return;   // already here
+        e.preventDefault();
+        clearFolderMarks();
+        row.classList.add("drop-into");
+        return;
+      }
+      if (draggedFolder === null || path === draggedFolder) return;
+      springLoad(path, hasKids, expanded);   // hover -> auto-expand
+      const zone = folderZone(e, row);
+      const t = folderTarget(path, zone);
+      if (!canMoveFolder(draggedFolder, t.to)) return;
+      e.preventDefault();
+      clearFolderMarks();
+      row.classList.add(zone === "into" ? "drop-into" : zone === "before" ? "drop-before" : "drop-after");
+    };
+    row.ondrop = (e) => {
+      if (draggedBookmark) {
+        e.preventDefault();
+        const bm = draggedBookmark;
+        clearFolderMarks();
+        cancelSpring();
+        if (bm.folder !== path) moveBookmark(bm, path);
+        return;
+      }
+      if (draggedFolder === null || path === draggedFolder) return;
+      e.preventDefault();
+      const t = folderTarget(path, folderZone(e, row));
+      const from = draggedFolder;
+      clearFolderMarks();
+      cancelSpring();
+      if (canMoveFolder(from, t.to)) moveFolder(from, t.to, t.before);
+    };
+
     container.appendChild(row);
 
     if (hasKids && expanded) renderTreeInto(node.children, container, depth + 1);
   }
+}
+
+// which part of a folder row the pointer is over -> drop intent
+function folderZone(e, row) {
+  const r = row.getBoundingClientRect();
+  const y = e.clientY - r.top;
+  if (y < r.height * 0.28) return "before";
+  if (y > r.height * 0.72) return "after";
+  return "into";
+}
+// resolve the dragged folder's new path + insertion anchor for a row + zone
+function folderTarget(rowPath, zone) {
+  const leaf = draggedFolder.split("/").pop();
+  if (zone === "into") return { to: rowPath + "/" + leaf, before: "" };   // last child
+  const parent = rowPath.split("/").slice(0, -1).join("/");
+  const to = parent ? parent + "/" + leaf : leaf;                          // "" => root
+  if (zone === "before") return { to, before: rowPath };
+  const sibs = childFolders(parent).filter((p) => p !== draggedFolder);    // "after"
+  const idx = sibs.indexOf(rowPath);
+  return { to, before: idx >= 0 && idx + 1 < sibs.length ? sibs[idx + 1] : "" };
+}
+function canMoveFolder(from, to) {
+  if (!to) return false;
+  return !to.startsWith(from + "/");     // not into own descendant (to === from is ok: reorder)
+}
+function clearFolderMarks() {
+  document.querySelectorAll(".drop-into, .drop-before, .drop-after")
+    .forEach((el) => el.classList.remove("drop-into", "drop-before", "drop-after"));
+}
+async function moveFolder(from, to, before) {
+  try { await api("POST", "/folders/move", { from, to, before }); await load(); }
+  catch (err) { alert("Move failed: " + err.message); }
+}
+async function moveBookmark(b, folder) {
+  try {
+    await api("PUT", "/bookmarks/" + encodeURIComponent(b.id), { name: b.name, folder, url: b.url });
+    await load();
+  } catch (err) { alert("Move failed: " + err.message); }
 }
 
 function renderTree() {
@@ -313,6 +432,17 @@ function renderRows() {
     const item = document.createElement("div");
     item.className = "bm-item";
     if (valid) item.onclick = () => openLink(b.url);   // whole item clickable (mode from config)
+
+    // drag a bookmark onto a sidebar folder to move it there
+    item.draggable = true;
+    item.ondragstart = (e) => {
+      e.stopPropagation();
+      draggedBookmark = b;
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", b.id);
+      item.classList.add("dragging");
+    };
+    item.ondragend = () => { item.classList.remove("dragging"); clearFolderMarks(); cancelSpring(); draggedBookmark = null; };
 
     if (folderView) {   // expand caret -> reveals the url as subtext
       const open = state.openItems.has(b.id);
