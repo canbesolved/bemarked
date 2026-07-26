@@ -457,7 +457,13 @@ button:hover { border-color: var(--accent); }
     top: 0;
     z-index: 15;
   }
-  .topbar-title { font-weight: 600; font-size: 1.05rem; }
+  .topbar-title {
+    position: absolute;                 /* center in the bar regardless of the menu button */
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: 600;
+    font-size: 1.05rem;
+  }
 
   #side {
     position: fixed;
