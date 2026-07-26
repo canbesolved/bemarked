@@ -339,7 +339,7 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
     }
 
     /* API */
-    if (is_get && mg_strcmp(hm->uri, mg_str("/config/public")) == 0) {
+    if (is_get && mg_strcmp(hm->uri, mg_str("/config")) == 0) {
         config_public(c, srv->cfg);
         return;
     }

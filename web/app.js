@@ -135,7 +135,7 @@ function textOn(bg) {
 
 // --- shortcuts (small square cards) ---
 async function renderShortcuts() {
-  const cfg = await api("GET", "/config/public").catch(() => null);
+  const cfg = await api("GET", "/config").catch(() => null);
   if (cfg) openInNewTab = cfg.link_open_mode !== "same-tab";
   const el = $("shortcuts");
   el.textContent = "";
