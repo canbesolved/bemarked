@@ -28,6 +28,10 @@ int storage_delete(struct storage *s, const char *id);
 /* True if a bookmark with this id exists (used to keep generated ids unique). */
 int storage_id_exists(struct storage *s, const char *id);
 
+/* Append `count` bookmarks (ids assigned here, kept unique), then persist once.
+ * Returns the number added, or -1 on error. */
+int storage_import(struct storage *s, struct bookmark *items, int count);
+
 /* Move a folder: rewrite `folder` from `from` (and every descendant under
  * `from/`) to `to`, and relocate that folder's rows just before the first row of
  * `before` (a sibling path; "" or NULL = place at the end) so folder order is

@@ -8,6 +8,7 @@
 #include "storage.h"
 #include "server.h"
 #include "platform.h"
+#include "import.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,6 +37,13 @@ int main(int argc, char **argv) {
     struct config cfg;
     struct storage *st;
     struct server *srv;
+
+    /* subcommand: bmkd convert [bookmarks.html] [bookmarks.txt] */
+    if (argc >= 2 && strcmp(argv[1], "convert") == 0) {
+        const char *in  = argc > 2 ? argv[2] : "bookmarks.html";
+        const char *out = argc > 3 ? argv[3] : "bookmarks.txt";
+        return import_file(in, out);
+    }
 
     srand((unsigned)(time(NULL) ^ (long)getpid()));  /* for model_new_id */
 

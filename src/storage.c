@@ -202,6 +202,20 @@ int storage_id_exists(struct storage *s, const char *id) {
     return rc;
 }
 
+int storage_import(struct storage *s, struct bookmark *items, int count) {
+    int i, added = 0;
+    pthread_mutex_lock(&s->lock);
+    for (i = 0; i < count; i++) {
+        struct bookmark b = items[i];
+        do { model_new_id(b.id); } while (find(s, b.id));   /* unique among all + just-added */
+        if (push(s, &b) != 0) break;
+        added++;
+    }
+    if (added && flush_locked(s) != 0) { pthread_mutex_unlock(&s->lock); return -1; }
+    pthread_mutex_unlock(&s->lock);
+    return added;
+}
+
 /* Does folder `f` belong to the subtree rooted at `path` (equal or descendant)? */
 static int under(const char *f, const char *path, size_t plen) {
     return strcmp(f, path) == 0 || (strncmp(f, path, plen) == 0 && f[plen] == '/');
