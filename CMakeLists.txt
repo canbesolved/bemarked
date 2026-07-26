@@ -41,6 +41,7 @@ add_executable(bmkd
   src/storage.c
   src/server.c
   src/platform.c
+  src/import.c            # browser bookmarks HTML -> bookmarks (CLI + /import)
   deps/mongoose/mongoose.c   # Mongoose 7.22 (GPLv2 or commercial)
   ${WEB_GEN_HEADERS}
 )
@@ -51,9 +52,8 @@ target_include_directories(bmkd PRIVATE
   ${CMAKE_BINARY_DIR}/generated
 )
 
-# --- conversion tool: browser bookmarks HTML -> bookmarks.txt ---
-add_executable(bmkd-convert tools/bmkd-convert.c src/model.c)
-target_include_directories(bmkd-convert PRIVATE src)
+# allow multi-MB request bodies (bookmark imports) — Mongoose default is 3 MB
+target_compile_definitions(bmkd PRIVATE MG_MAX_RECV_SIZE=33554432)
 
 # --- Platform libraries ---
 if(WIN32)

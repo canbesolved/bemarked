@@ -516,6 +516,7 @@ function render() {
   $("main").classList.toggle("browsing", browsing);
   $("searchWrap").hidden = folderView;   // hide search when viewing a folder
   $("shortcuts").hidden = browsing;
+  $("appmenu").hidden = browsing;        // app menu only on the homepage
   if (browsing) {
     renderRows();   // toggles list/empty visibility based on results
   } else {
@@ -600,6 +601,40 @@ initTheme();
 function closeNav() { document.body.classList.remove("nav-open"); }
 $("navToggle").onclick = () => document.body.classList.toggle("nav-open");
 $("navBackdrop").onclick = closeNav;
+
+// top-right app menu + import bookmarks
+$("appmenuBtn").onclick = (e) => { e.stopPropagation(); $("appmenuList").hidden = !$("appmenuList").hidden; };
+$("appmenuList").onclick = (e) => e.stopPropagation();
+document.addEventListener("click", () => { $("appmenuList").hidden = true; });
+$("importBtn").onclick = () => { $("appmenuList").hidden = true; $("importFile").click(); };
+$("importFile").onchange = async (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";                       // allow re-selecting the same file
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const res = await fetch("/import", { method: "POST", headers: { "Content-Type": "text/html" }, body: text });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.status);
+    const r = await res.json();
+    await load();                            // refresh page / folder structure
+    showToast(`Imported ${r.added} bookmark(s)` + (r.skipped ? ` · ${r.skipped} skipped` : ""), "success");
+  } catch (err) {
+    showToast("Import failed: " + err.message, "error");
+  }
+};
+
+// transient toast notification (top-right)
+function showToast(msg, type) {
+  const t = document.createElement("div");
+  t.className = "toast" + (type ? " " + type : "");
+  t.textContent = msg;
+  $("toasts").appendChild(t);
+  requestAnimationFrame(() => t.classList.add("show"));
+  setTimeout(() => {
+    t.classList.remove("show");
+    setTimeout(() => t.remove(), 250);
+  }, type === "error" ? 6000 : 4000);
+}
 
 // edge-swipe: drag right from the left edge to open the drawer, left to close (mobile)
 (function () {

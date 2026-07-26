@@ -2,6 +2,7 @@
 /* Mongoose HTTP handlers, routing, and security enforcement.
  * The embedded SPA is served from the generated web asset byte arrays. */
 #include "server.h"
+#include "import.h"
 #include "mongoose.h"
 /* Generated at build time from web/ (see CMakeLists.txt). Served same-origin:
  *   /            -> web_index_html
@@ -22,6 +23,7 @@
 #include <pthread.h>
 
 #define MAX_BODY (64 * 1024)
+#define IMPORT_MAX (32 * 1024 * 1024)   /* bookmarks HTML can be several MB */
 
 struct server {
     struct mg_mgr mgr;
@@ -285,6 +287,22 @@ static void shortcuts_add(struct mg_connection *c, struct config *cfg,
     shortcuts_list(c, cfg);
 }
 
+/* POST /import : body is a Netscape bookmarks HTML file; parse + bulk-add. */
+static void import_bookmarks(struct mg_connection *c, struct storage *st,
+                             struct mg_http_message *hm) {
+    struct bookmark *items = NULL;
+    int count = 0, skipped = 0, added;
+    if (hm->body.len == 0) { reply_err(c, 400, "empty body"); return; }
+    if (import_parse(hm->body.buf, hm->body.len, &items, &count, &skipped) != 0) {
+        reply_err(c, 500, "parse failed");
+        return;
+    }
+    added = storage_import(st, items, count);
+    free(items);
+    if (added < 0) { reply_err(c, 500, "import failed"); return; }
+    mg_http_reply(c, 200, JSON_HDRS, "{\"added\":%d,\"skipped\":%d}\n", added, skipped);
+}
+
 /* --- dispatcher --- */
 
 static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
@@ -304,8 +322,9 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
     mutating  = is_post || is_put || is_delete;
 
     if (mutating) {
+        int is_import = is_post && mg_strcmp(hm->uri, mg_str("/import")) == 0;
         if (!mutation_allowed(hm)) { reply_err(c, 403, "forbidden origin"); return; }
-        if (hm->body.len > MAX_BODY) { reply_err(c, 413, "body too large"); return; }
+        if (hm->body.len > (size_t)(is_import ? IMPORT_MAX : MAX_BODY)) { reply_err(c, 413, "body too large"); return; }
     }
 
     /* static assets */
@@ -381,6 +400,10 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
         char query[300];
         snprintf(query, sizeof(query), "%.*s", (int)hm->query.len, hm->query.buf);
         list_bookmarks(c, srv->st, query);
+        return;
+    }
+    if (is_post && mg_strcmp(hm->uri, mg_str("/import")) == 0) {
+        import_bookmarks(c, srv->st, hm);
         return;
     }
     if (is_post && mg_strcmp(hm->uri, mg_str("/folders/move")) == 0) {
