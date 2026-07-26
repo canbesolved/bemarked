@@ -12,7 +12,7 @@
 
 struct storage;  /* opaque */
 
-/* Open bookmarks.tsv under dir, build the in-memory index. Returns NULL on error. */
+/* Open bookmarks.txt under dir, build the in-memory index. Returns NULL on error. */
 struct storage *storage_open(const char *dir);
 void          storage_close(struct storage *s);
 

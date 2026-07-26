@@ -3,7 +3,7 @@
 # Use # for comments
 bind = "127.0.0.1"        # localhost-only by default
 port = 8989
-bookmarks_dir = "./data"  # bookmarks.tsv lives here
+bookmarks_dir = "./data"  # bookmarks.txt lives here
 tray_icon = enable        # enable | disable (ignored on headless platforms)
 link_open_mode = "new-tab"  # new-tab | same-tab — how bookmark links open
 

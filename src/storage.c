@@ -3,8 +3,8 @@
  *
  * File format (TAB-separated, fixed columns), first line is a comment header:
  *   #<TAB>id<TAB>name<TAB>folder<TAB>url
- * Write path: build full contents -> write bookmarks.tsv.tmp (same dir) ->
- * fflush + fsync -> move old to bookmarks.tsv.bak -> rename() over target. */
+ * Write path: build full contents -> write bookmarks.txt.tmp (same dir) ->
+ * fflush + fsync -> move old to bookmarks.txt.bak -> rename() over target. */
 #include "storage.h"
 
 #include <stdio.h>
@@ -111,9 +111,9 @@ struct storage *storage_open(const char *dir) {
     struct storage *s = calloc(1, sizeof(*s));
     if (!s) return NULL;
     mkdir(dir, 0755);  /* ignore EEXIST */
-    snprintf(s->path, sizeof(s->path), "%s/bookmarks.tsv", dir);
-    snprintf(s->tmp,  sizeof(s->tmp),  "%s/bookmarks.tsv.tmp", dir);
-    snprintf(s->bak,  sizeof(s->bak),  "%s/bookmarks.tsv.bak", dir);
+    snprintf(s->path, sizeof(s->path), "%s/bookmarks.txt", dir);
+    snprintf(s->tmp,  sizeof(s->tmp),  "%s/bookmarks.txt.tmp", dir);
+    snprintf(s->bak,  sizeof(s->bak),  "%s/bookmarks.txt.bak", dir);
     pthread_mutex_init(&s->lock, NULL);
     load(s);
 
