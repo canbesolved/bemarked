@@ -11,8 +11,25 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
+
+/* Default bookmarks file: "bookmarks.txt" next to the bmkd binary (via argv[0]).
+ * Falls back to the current directory if argv[0] has no path component. */
+static void default_bookmarks_file(const char *argv0, char *out, size_t sz) {
+    const char *slash = strrchr(argv0, '/');
+#ifdef _WIN32
+    const char *bslash = strrchr(argv0, '\\');
+    if (bslash && (!slash || bslash > slash)) slash = bslash;
+#endif
+    if (slash) {
+        int dirlen = (int)(slash - argv0) + 1;
+        snprintf(out, sz, "%.*sbookmarks.txt", dirlen, argv0);
+    } else {
+        snprintf(out, sz, "bookmarks.txt");
+    }
+}
 
 int main(int argc, char **argv) {
     const char *conf = argc > 1 ? argv[1] : "conf.txt";
@@ -26,10 +43,12 @@ int main(int argc, char **argv) {
         fprintf(stderr, "bmkd: config file '%s' not found\n", conf);
         return 1;
     }
+    if (cfg.bookmarks_file[0] == '\0')   /* not set in conf -> next to the binary */
+        default_bookmarks_file(argv[0], cfg.bookmarks_file, sizeof(cfg.bookmarks_file));
 
-    st = storage_open(cfg.bookmarks_dir);
+    st = storage_open(cfg.bookmarks_file);
     if (!st) {
-        fprintf(stderr, "bmkd: cannot open storage dir '%s'\n", cfg.bookmarks_dir);
+        fprintf(stderr, "bmkd: cannot open bookmarks file '%s'\n", cfg.bookmarks_file);
         return 1;
     }
 
