@@ -7,7 +7,7 @@
  * Serves the embedded SPA and the internal JSON endpoints (v1, not yet a stable
  * public contract):
  *   GET/POST/PUT/DELETE /bookmarks[/{id}]
- *   GET /search?q=...   GET /config/public
+ *   GET /search?q=...   GET /config
  * Owns authoritative search and all security checks: loopback bind, Host/Origin
  * validation on mutating requests, HTML-escaping, CSP, URL scheme allowlist,
  * body/field size limits. Runs on a background worker thread. */
