@@ -12,8 +12,9 @@
 
 struct storage;  /* opaque */
 
-/* Open bookmarks.txt under dir, build the in-memory index. Returns NULL on error. */
-struct storage *storage_open(const char *dir);
+/* Open the bookmarks file (path), build the in-memory index. Returns NULL on error.
+ * The .tmp and .bak siblings are derived by appending to this path. */
+struct storage *storage_open(const char *file);
 void          storage_close(struct storage *s);
 
 /* Read side (served from the in-memory index). */
