@@ -431,6 +431,10 @@ function renderRows() {
     const valid = /^https?:\/\//.test(b.url);
     const item = document.createElement("div");
     item.className = "bm-item";
+    if (folderView) {
+      item.classList.add("collapsible");                              // caret toggles actions/url
+      if (state.openItems.has(b.id)) item.classList.add("open");
+    }
     if (valid) item.onclick = () => openLink(b.url);   // whole item clickable (mode from config)
 
     // drag a bookmark onto a sidebar folder to move it there

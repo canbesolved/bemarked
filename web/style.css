@@ -509,5 +509,20 @@ button:hover { border-color: var(--accent); }
   .shortcut-tile { width: 100%; }
   .shortcut { width: 100%; height: auto; aspect-ratio: 1 / 1; }
 
+  /* bookmark rows: name gets the full first line; actions drop to the second */
+  .bm-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: .5rem;
+    row-gap: .25rem;
+  }
+  .bm-caret { grid-column: 1; grid-row: 1 / span 2; }
+  .bm-main { grid-column: 2; grid-row: 1; }
+  .row-actions { grid-column: 2; grid-row: 2; justify-content: flex-start; }
+  /* actions hidden until the row is expanded via the caret */
+  .bm-item.collapsible .row-actions { display: none; }
+  .bm-item.collapsible.open .row-actions { display: flex; }
+
   #overlay { padding-top: 8vh; }
 }
