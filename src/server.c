@@ -383,6 +383,16 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
         list_bookmarks(c, srv->st, query);
         return;
     }
+    if (is_post && mg_strcmp(hm->uri, mg_str("/folders/move")) == 0) {
+        char from[BMKD_FOLDER_MAX + 1], to[BMKD_FOLDER_MAX + 1], before[BMKD_FOLDER_MAX + 1];
+        json_field(hm->body, "$.from", from, sizeof(from));
+        json_field(hm->body, "$.to", to, sizeof(to));
+        json_field(hm->body, "$.before", before, sizeof(before));   /* optional anchor */
+        if (from[0] == '\0' || to[0] == '\0') { reply_err(c, 400, "from/to required"); return; }
+        if (storage_move_folder(srv->st, from, to, before) < 0) { reply_err(c, 400, "bad move"); return; }
+        mg_http_reply(c, 200, JSON_HDRS, "{\"ok\":true}\n");
+        return;
+    }
     if (mg_strcmp(hm->uri, mg_str("/bookmarks")) == 0) {
         if (is_get)  { list_bookmarks(c, srv->st, NULL); return; }
         if (is_post) { create_bookmark(c, srv->st, hm); return; }

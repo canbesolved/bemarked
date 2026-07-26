@@ -201,3 +201,68 @@ int storage_id_exists(struct storage *s, const char *id) {
     pthread_mutex_unlock(&s->lock);
     return rc;
 }
+
+/* Does folder `f` belong to the subtree rooted at `path` (equal or descendant)? */
+static int under(const char *f, const char *path, size_t plen) {
+    return strcmp(f, path) == 0 || (strncmp(f, path, plen) == 0 && f[plen] == '/');
+}
+
+int storage_move_folder(struct storage *s, const char *from, const char *to,
+                        const char *before) {
+    size_t flen = strlen(from), blen = before ? strlen(before) : 0;
+    size_t i, mc = 0, w = 0, k, anchor;
+    int *ismoved, inserted = 0, rc;
+    size_t *moved;
+    struct bookmark *tmp;
+
+    if (flen == 0 || to[0] == '\0') return -1;
+    if (strncmp(to, from, flen) == 0 && to[flen] == '/') return -1;  /* into own descendant */
+
+    pthread_mutex_lock(&s->lock);
+    ismoved = calloc(s->count ? s->count : 1, sizeof(int));
+    moved = malloc((s->count ? s->count : 1) * sizeof(size_t));
+    tmp = malloc((s->count ? s->count : 1) * sizeof(struct bookmark));
+    if (!ismoved || !moved || !tmp) {
+        free(ismoved); free(moved); free(tmp);
+        pthread_mutex_unlock(&s->lock);
+        return -1;
+    }
+
+    /* 1) collect + reparent the moved rows (rewrite their folder prefix) */
+    for (i = 0; i < s->count; i++) {
+        char *f = s->items[i].folder;
+        if (!under(f, from, flen)) continue;
+        ismoved[i] = 1; moved[mc++] = i;
+        if (strcmp(f, from) == 0) {
+            snprintf(f, sizeof(s->items[i].folder), "%s", to);
+        } else {
+            char rest[BMKD_FOLDER_MAX + 1];
+            snprintf(rest, sizeof(rest), "%s", f + flen);   /* "/sub/…" */
+            snprintf(f, sizeof(s->items[i].folder), "%s%s", to, rest);
+        }
+    }
+    if (mc == 0) { free(ismoved); free(moved); free(tmp); pthread_mutex_unlock(&s->lock); return 0; }
+
+    /* 2) anchor = first non-moved row under `before` (or end of list) */
+    anchor = s->count;
+    if (blen) {
+        for (i = 0; i < s->count; i++) {
+            if (ismoved[i]) continue;
+            if (under(s->items[i].folder, before, blen)) { anchor = i; break; }
+        }
+    }
+
+    /* 3) rebuild the array with the moved block spliced in at the anchor */
+    for (i = 0; i < s->count; i++) {
+        if (i == anchor) { for (k = 0; k < mc; k++) tmp[w++] = s->items[moved[k]]; inserted = 1; }
+        if (ismoved[i]) continue;
+        tmp[w++] = s->items[i];
+    }
+    if (!inserted) for (k = 0; k < mc; k++) tmp[w++] = s->items[moved[k]];
+    memcpy(s->items, tmp, s->count * sizeof(struct bookmark));
+
+    free(ismoved); free(moved); free(tmp);
+    rc = flush_locked(s);
+    pthread_mutex_unlock(&s->lock);
+    return rc == 0 ? (int)mc : -1;
+}
