@@ -51,6 +51,10 @@ target_include_directories(bmkd PRIVATE
   ${CMAKE_BINARY_DIR}/generated
 )
 
+# --- conversion tool: browser bookmarks HTML -> bookmarks.txt ---
+add_executable(bmkd-convert tools/bmkd-convert.c src/model.c)
+target_include_directories(bmkd-convert PRIVATE src)
+
 # --- Platform libraries ---
 if(WIN32)
   target_link_libraries(bmkd PRIVATE ws2_32)
