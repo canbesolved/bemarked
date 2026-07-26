@@ -489,5 +489,17 @@ button:hover { border-color: var(--accent); }
   .search-wrap { margin: 12vh auto 1.25rem; }              /* less top gap on phones */
   #main.browsing .search-wrap { margin: .5rem auto 1rem; }
 
+  /* shortcuts stretch to fill the screen width on mobile */
+  #shortcuts {
+    width: 100%;
+    max-width: none;
+    display: grid;
+    /* ~4 columns on a phone, more as the screen widens; always fills the width */
+    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+    gap: .5rem;
+  }
+  .shortcut-tile { width: 100%; }
+  .shortcut { width: 100%; height: auto; aspect-ratio: 1 / 1; }
+
   #overlay { padding-top: 8vh; }
 }
