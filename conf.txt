@@ -2,7 +2,7 @@
 # Format: key = value or key = "value"
 # Use # for comments
 bind = "127.0.0.1"                # localhost-only by default
-port = 8989                       # listening TCP port
+port = 7773                       # listening TCP port
 bookmarks_file = "bookmarks.txt"  # path to the bookmarks file (default: next to the bmkd binary)
 tray_icon = enable                # enable | disable (ignored on headless platforms)
 link_open_mode = "new-tab"        # new-tab | same-tab — how bookmark links open

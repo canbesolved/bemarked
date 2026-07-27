@@ -11,7 +11,7 @@
 
 static void defaults(struct config *c) {
     memset(c, 0, sizeof(*c));
-    c->port = 8989;
+    c->port = 7773;
     snprintf(c->bind, sizeof(c->bind), "127.0.0.1");
     c->bookmarks_file[0] = '\0';   /* empty => main defaults it next to the binary */
     c->tray_icon = 1;
