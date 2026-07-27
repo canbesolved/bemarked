@@ -117,28 +117,21 @@ static void reply_err(struct mg_connection *c, int status, const char *msg) {
     mg_http_reply(c, status, JSON_HDRS, "{\"error\":\"%s\"}\n", msg);
 }
 
-/* A Host/Origin header value is loopback if its host part is localhost / 127.* / ::1. */
-static int host_is_loopback(struct mg_str h) {
-    /* strip scheme if present (Origin looks like "http://127.0.0.1:8989") */
-    const char *p = h.buf;
-    size_t n = h.len, i;
-    for (i = 0; i + 2 < n; i++) {
-        if (p[i] == '/' && p[i + 1] == '/') { p += i + 2; n -= i + 2; break; }
-    }
-    return (n >= 9 && strncmp(p, "localhost", 9) == 0) ||
-           (n >= 9 && strncmp(p, "127.0.0.1", 9) == 0) ||
-           (n >= 3 && strncmp(p, "::1", 3) == 0) ||
-           (n >= 5 && strncmp(p, "[::1]", 5) == 0);
-}
-
-/* CSRF / DNS-rebinding guard for mutating requests: Host must be loopback, and
- * if an Origin header is present it must be loopback too. */
+/* CSRF guard for mutating requests: if the browser sent an Origin, it must be
+ * the same origin as the Host header. This works for loopback and LAN access
+ * alike (a cross-site page would carry a different Origin). Requests without an
+ * Origin (curl, same-origin navigations) are allowed. */
 static int mutation_allowed(struct mg_http_message *hm) {
     struct mg_str *host = mg_http_get_header(hm, "Host");
     struct mg_str *origin = mg_http_get_header(hm, "Origin");
-    if (!host || !host_is_loopback(*host)) return 0;
-    if (origin && origin->len && !host_is_loopback(*origin)) return 0;
-    return 1;
+    const char *op;
+    size_t on, i;
+    if (!origin || origin->len == 0) return 1;   /* no Origin: not a cross-site browser POST */
+    if (!host) return 0;
+    op = origin->buf; on = origin->len;
+    for (i = 0; i + 2 < on; i++)                 /* strip scheme: "http://host:port" -> "host:port" */
+        if (op[i] == '/' && op[i + 1] == '/') { op += i + 2; on -= i + 2; break; }
+    return on == host->len && memcmp(op, host->buf, on) == 0;
 }
 
 /* Copy a JSON string field into a fixed buffer. Missing field -> empty. */
@@ -404,6 +397,14 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
     }
     if (is_post && mg_strcmp(hm->uri, mg_str("/import")) == 0) {
         import_bookmarks(c, srv->st, hm);
+        return;
+    }
+    if (is_post && mg_strcmp(hm->uri, mg_str("/folders/delete")) == 0) {
+        char folder[BMKD_FOLDER_MAX + 1];
+        json_field(hm->body, "$.folder", folder, sizeof(folder));
+        if (folder[0] == '\0') { reply_err(c, 400, "folder required"); return; }
+        if (storage_delete_folder(srv->st, folder) < 0) { reply_err(c, 400, "delete failed"); return; }
+        mg_http_reply(c, 200, JSON_HDRS, "{\"ok\":true}\n");
         return;
     }
     if (is_post && mg_strcmp(hm->uri, mg_str("/folders/move")) == 0) {

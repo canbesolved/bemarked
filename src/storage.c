@@ -280,3 +280,19 @@ int storage_move_folder(struct storage *s, const char *from, const char *to,
     pthread_mutex_unlock(&s->lock);
     return rc == 0 ? (int)mc : -1;
 }
+
+int storage_delete_folder(struct storage *s, const char *path) {
+    size_t plen = strlen(path), i, w = 0, removed = 0;
+    int rc = 0;
+    if (plen == 0) return -1;
+    pthread_mutex_lock(&s->lock);
+    for (i = 0; i < s->count; i++) {           /* stable compaction (keeps order) */
+        if (under(s->items[i].folder, path, plen)) { removed++; continue; }
+        if (w != i) s->items[w] = s->items[i];
+        w++;
+    }
+    s->count = w;
+    if (removed) rc = flush_locked(s);
+    pthread_mutex_unlock(&s->lock);
+    return rc == 0 ? (int)removed : -1;
+}

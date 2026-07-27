@@ -126,13 +126,30 @@ function renderTreeInto(map, container, depth) {
     btn.onclick = () => { state.folder = path; state.query = ""; $("search").value = ""; closeNav(); render(); };
     row.appendChild(btn);
 
-    if (active) {  // '+' to add a bookmark directly into the selected folder
-      const add = document.createElement("button");
-      add.className = "folder-add";
-      add.textContent = "+";
-      add.title = "New bookmark in " + path;
-      add.onclick = (e) => { e.stopPropagation(); openForm(null, path); };
-      row.appendChild(add);
+    if (active) {  // '⋯' menu (Rename / Delete) on the selected folder
+      const wrap = document.createElement("span");
+      wrap.className = "folder-menu-wrap";
+      const mbtn = document.createElement("button");
+      mbtn.className = "folder-menu-btn";
+      mbtn.title = "Folder options";
+      mbtn.appendChild(Object.assign(document.createElement("span"), { className: "dots" }));
+      const menu = document.createElement("div");
+      menu.className = "folder-menu";
+      menu.hidden = true;
+      menu.onclick = (e) => e.stopPropagation();
+      const ren = document.createElement("button"); ren.textContent = "Rename";
+      ren.onclick = () => { menu.hidden = true; openFolderForm(path); };
+      const del = document.createElement("button"); del.className = "folder-del"; del.textContent = "Delete";
+      del.onclick = () => { menu.hidden = true; deleteFolder(path); };
+      menu.append(ren, del);
+      mbtn.onclick = (e) => {
+        e.stopPropagation(); e.preventDefault();
+        const wasHidden = menu.hidden;
+        closeFolderMenus();
+        menu.hidden = !wasHidden;
+      };
+      wrap.append(mbtn, menu);
+      row.appendChild(wrap);
     }
 
     // drag to reparent (native DnD); separator/highlight shows the drop position
@@ -223,6 +240,76 @@ async function moveBookmark(b, folder) {
     await api("PUT", "/bookmarks/" + encodeURIComponent(b.id), { name: b.name, folder, url: b.url });
     await load();
   } catch (err) { alert("Move failed: " + err.message); }
+}
+
+// --- web-styled confirmation dialog (returns a Promise<boolean>) ---
+let confirmResolve = null;
+function confirmDialog(msg, okLabel) {
+  $("confirmMsg").textContent = msg;
+  $("confirmOk").textContent = okLabel || "Delete";
+  $("confirmOverlay").hidden = false;
+  return new Promise((resolve) => { confirmResolve = resolve; });
+}
+function closeConfirm(result) {
+  $("confirmOverlay").hidden = true;
+  if (confirmResolve) { confirmResolve(result); confirmResolve = null; }
+}
+$("confirmOk").onclick = () => closeConfirm(true);
+$("confirmCancel").onclick = () => closeConfirm(false);
+$("confirmOverlay").onclick = (e) => { if (e.target === $("confirmOverlay")) closeConfirm(false); };
+
+// --- folder ⋯ menu: rename / delete ---
+function closeFolderMenus() {
+  document.querySelectorAll(".folder-menu").forEach((m) => (m.hidden = true));
+}
+function nextSibling(path) {
+  const parent = path.split("/").slice(0, -1).join("/");
+  const sibs = childFolders(parent);
+  const i = sibs.indexOf(path);
+  return i >= 0 && i + 1 < sibs.length ? sibs[i + 1] : "";
+}
+function openFolderForm(path) {
+  $("fd-path").value = path;
+  $("fd-name").value = path.split("/").pop();
+  closeNav(); closeFolderMenus();
+  $("folderOverlay").hidden = false;
+  $("fd-name").focus(); $("fd-name").select();
+}
+function closeFolderForm() { $("folderOverlay").hidden = true; $("folderForm").reset(); }
+
+async function submitFolderForm(e) {
+  e.preventDefault();
+  const path = $("fd-path").value;
+  const leaf = $("fd-name").value.trim().replace(/^\/+|\/+$/g, "");
+  if (!leaf) return;
+  const parent = path.split("/").slice(0, -1).join("/");
+  const to = parent ? parent + "/" + leaf : leaf;
+  if (to === path) { closeFolderForm(); return; }
+  try {
+    await api("POST", "/folders/move", { from: path, to, before: nextSibling(path) });  // keep position
+    if (state.folder === path) state.folder = to;
+    else if (state.folder.startsWith(path + "/")) state.folder = to + state.folder.slice(path.length);
+    closeFolderForm();
+    await load();
+    showToast("Folder renamed", "success");
+  } catch (err) { showToast("Rename failed: " + err.message, "error"); }
+}
+
+async function deleteFolder(path) {
+  if (!(await confirmDialog(`Delete folder "${path}" and all its bookmarks?`))) return;
+  try {
+    await api("POST", "/folders/delete", { folder: path });
+    if (state.folder === path || state.folder.startsWith(path + "/")) state.folder = "";
+    await load();
+    showToast("Folder deleted", "success");
+  } catch (err) { showToast("Delete failed: " + err.message, "error"); }
+}
+
+// Expand a folder and all its ancestors so it's visible + highlighted in the tree.
+function revealInTree(path) {
+  const parts = path.split("/");
+  let acc = "";
+  for (const p of parts) { acc = acc ? acc + "/" + p : p; state.expanded.add(acc); }
 }
 
 function renderTree() {
@@ -350,7 +437,7 @@ function closeShortcutMenus() {
 }
 
 async function deleteShortcut(index) {
-  if (!confirm("Delete this shortcut?")) return;
+  if (!(await confirmDialog("Delete this shortcut?"))) return;
   try { await api("DELETE", "/shortcuts/" + encodeURIComponent(index)); await renderShortcuts(); }
   catch (err) { alert("Delete failed: " + err.message); }
 }
@@ -417,7 +504,7 @@ function renderRows() {
   for (const path of subfolders) {   // subfolders first, then bookmarks
     const item = document.createElement("div");
     item.className = "bm-item folder-item";
-    item.onclick = () => { state.folder = path; render(); };   // navigate into subfolder
+    item.onclick = () => { state.folder = path; revealInTree(path); render(); };   // navigate + reveal in sidebar
     const fic = document.createElement("span");
     fic.className = "ic ic-folder";
     const nm = document.createElement("span");
@@ -570,7 +657,7 @@ async function copyLink(url, btn) {
 }
 
 async function removeBookmark(id) {
-  if (!confirm("Delete this bookmark?")) return;
+  if (!(await confirmDialog("Delete this bookmark?"))) return;
   try { await api("DELETE", "/bookmarks/" + encodeURIComponent(id)); await load(); }
   catch (err) { alert("Delete failed: " + err.message); }
 }
@@ -710,10 +797,14 @@ $("sc-color").oninput = (e) => {
 };
 $("sc-color-picker").oninput = (e) => { $("sc-color").value = e.target.value; };
 
+$("folderForm").onsubmit = submitFolderForm;
+$("fd-cancel").onclick = closeFolderForm;
+$("folderOverlay").onclick = (e) => { if (e.target === $("folderOverlay")) closeFolderForm(); };
+
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") { closeForm(); closeShortcutForm(); closeShortcutMenus(); }
+  if (e.key === "Escape") { closeForm(); closeShortcutForm(); closeFolderForm(); closeConfirm(false); closeShortcutMenus(); closeFolderMenus(); }
 });
-document.addEventListener("click", closeShortcutMenus);   // click anywhere closes kebab menus
+document.addEventListener("click", () => { closeShortcutMenus(); closeFolderMenus(); });   // click anywhere closes menus
 
 renderShortcuts();
 load();
