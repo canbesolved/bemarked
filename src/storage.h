@@ -40,4 +40,8 @@ int storage_import(struct storage *s, struct bookmark *items, int count);
 int storage_move_folder(struct storage *s, const char *from, const char *to,
                         const char *before);
 
+/* Delete a folder and everything under it (subfolders + bookmarks). Persists.
+ * Returns rows removed (>=0), or -1 on error. */
+int storage_delete_folder(struct storage *s, const char *path);
+
 #endif /* BMKD_STORAGE_H */

@@ -256,16 +256,37 @@ button:hover { border-color: var(--accent); }
 .ic-arrow { --i: url("/assets/arrow_icon.svg"); width: .7em; height: .7em; }
 .ic-arrow-down { --i: url("/assets/arrow_down_icon.svg"); width: .7em; height: .7em; }
 .tree-node .ic-folder { margin-right: .25em; }
-.folder-add {
-  border: none;
-  background: transparent;
-  padding: .15rem .5rem;
-  margin-right: .15rem;
-  border-radius: 6px;
-  font-weight: 700;
-  line-height: 1;
+/* folder ⋯ options menu (Rename / Delete) on the selected folder */
+.folder-menu-wrap { position: relative; flex: none; display: inline-flex; align-items: center; margin-right: .15rem; }
+.folder-menu-btn {
+  border: none; background: transparent; color: inherit;
+  width: 1.6rem; height: 1.6rem; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; border-radius: 6px;
 }
-.folder-add:hover { background: #ffffff33; }
+.folder-menu-btn:hover { background: #ffffff33; }
+.folder-row.active .folder-menu-btn { color: var(--on-accent); }
+.folder-menu-btn .dots, .folder-menu-btn .dots::before, .folder-menu-btn .dots::after {
+  content: ""; width: 3px; height: 3px; border-radius: 50%; background: currentColor;
+}
+.folder-menu-btn .dots { position: relative; }
+.folder-menu-btn .dots::before, .folder-menu-btn .dots::after { position: absolute; top: 0; }
+.folder-menu-btn .dots::before { left: -5px; }
+.folder-menu-btn .dots::after { left: 5px; }
+.folder-menu {
+  position: absolute; right: 0; top: 100%;
+  z-index: 30; min-width: 110px;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px;
+  box-shadow: 0 6px 20px #0005; overflow: hidden;
+}
+.folder-menu[hidden] { display: none; }
+.folder-menu button {
+  display: block; width: 100%; text-align: left;
+  border: none; background: transparent; padding: .45rem .7rem;
+}
+.folder-menu button:hover { background: var(--surface-2); }
+.folder-del { color: var(--danger); }
 
 /* --- main / start page --- */
 #main { overflow: auto; padding: 1.25rem; }
@@ -435,7 +456,7 @@ button:hover { border-color: var(--accent); }
 .empty { color: var(--muted); padding: 1rem 0; text-align: center; }
 
 /* --- add/edit form: dropdown overlay --- */
-#overlay, #shortcutOverlay {
+#overlay, #shortcutOverlay, #folderOverlay, #confirmOverlay {
   position: fixed;
   inset: 0;
   background: #0007;
@@ -445,8 +466,8 @@ button:hover { border-color: var(--accent); }
   padding-top: 12vh;
   z-index: 20;
 }
-#overlay[hidden], #shortcutOverlay[hidden] { display: none; }
-#form, #shortcutForm {
+#overlay[hidden], #shortcutOverlay[hidden], #folderOverlay[hidden], #confirmOverlay[hidden] { display: none; }
+#form, #shortcutForm, #folderForm, #confirmBox {
   width: min(420px, 92vw);
   display: grid;
   gap: .6rem;
@@ -458,13 +479,17 @@ button:hover { border-color: var(--accent); }
   animation: drop .12s ease;
 }
 @keyframes drop { from { transform: translateY(-10px); opacity: 0; } }
-#form h2, #shortcutForm h2 { margin: .1rem 0 .3rem; font-size: 1.05rem; }
-#form input, #shortcutForm input { margin: 0; }
+#form h2, #shortcutForm h2, #folderForm h2 { margin: .1rem 0 .3rem; font-size: 1.05rem; }
+#form input, #shortcutForm input, #folderForm input { margin: 0; }
 .form-actions { display: flex; gap: .5rem; }
-#saveBtn, #shortcutForm button[type="submit"] {
+#saveBtn, #shortcutForm button[type="submit"], #folderForm button[type="submit"] {
   background: var(--accent); color: var(--on-accent); border-color: var(--accent);
 }
 #saveBtn:hover, #shortcutForm button[type="submit"]:hover { background: var(--accent-hover); }
+
+#confirmMsg { margin: 0 0 .4rem; }
+.danger-btn { background: var(--danger); color: #fff; border-color: var(--danger); }
+.danger-btn:hover { filter: brightness(.93); border-color: var(--danger); }
 
 /* color field: hex input + native picker swatch */
 .color-row { display: flex; gap: .5rem; align-items: stretch; }

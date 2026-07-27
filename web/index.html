@@ -81,6 +81,30 @@
     </form>
   </div>
 
+  <!-- rename folder popup -->
+  <div id="folderOverlay" hidden>
+    <form id="folderForm">
+      <h2>Rename folder</h2>
+      <input type="hidden" id="fd-path">
+      <input id="fd-name" placeholder="Folder name" required autocomplete="off">
+      <div class="form-actions">
+        <button type="submit">Save</button>
+        <button type="button" id="fd-cancel">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- confirmation dialog -->
+  <div id="confirmOverlay" hidden>
+    <div id="confirmBox">
+      <p id="confirmMsg"></p>
+      <div class="form-actions">
+        <button id="confirmOk" class="danger-btn">Delete</button>
+        <button id="confirmCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
