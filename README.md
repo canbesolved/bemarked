@@ -133,6 +133,16 @@ Firefox, Edge, and Safari all produce. Two ways to import:
 - Add to Flathub and Snap
 - Benchmark memory/disk footprint and publish measured numbers
 
+## Support
+
+bemarked is free and open source. If you find it useful, please consider supporting its
+development — it helps a lot and is hugely appreciated:
+
+- ❤️ **[GitHub Sponsors](https://github.com/sponsors/canbesolved)**
+- 🧡 **[Patreon](https://www.patreon.com/c/CanBeSolved)**
+
+Thank you!
+
 ## License
 
 **bemarked is licensed under GPLv2-only** (see `LICENSE`); source files carry
