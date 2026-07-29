@@ -1,4 +1,4 @@
-# BMKD configuration  file v1
+# BMKD configuration
 # Format: key = value or key = "value"
 # Use # for comments
 bind = "127.0.0.1"                # localhost-only by default
