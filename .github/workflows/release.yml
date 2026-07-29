@@ -1,0 +1,136 @@
+name: Release
+
+# Build binaries for every supported target and attach them to the GitHub
+# Release when a version tag (vX.Y.Z) is pushed. Also runnable manually.
+#
+# The static musl Linux binaries below run unmodified on OpenWRT (same arch) —
+# OpenWRT is just Linux + musl, and these carry no libc dependency.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write            # needed to create/update the Release
+
+env:
+  # source files (keep in sync with CMakeLists.txt)
+  SRC: "src/main.c src/config.c src/model.c src/storage.c src/server.c src/platform.c src/compat.c src/import.c deps/mongoose/mongoose.c"
+  CFLAGS: "-O2 -Isrc -Ideps/mongoose -Igenerated -DMG_MAX_RECV_SIZE=33554432"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Linux + OpenWRT + RISC-V SBCs (static musl) via zig cc — one job, all arches.
+  # ---------------------------------------------------------------------------
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cmake + zig
+        run: |
+          sudo apt-get update && sudo apt-get install -y cmake
+          ZIG=zig-x86_64-linux-0.16.0
+          curl -fsSL "https://ziglang.org/download/0.16.0/$ZIG.tar.xz" | tar -xJ
+          echo "$PWD/$ZIG" >> "$GITHUB_PATH"
+
+      - name: Generate embedded web headers (host build)
+        run: |
+          cmake -S . -B build-host
+          cmake --build build-host --target bmkd -j
+          cp -r build-host/generated generated       # web_*.h now in ./generated
+
+      - name: Cross-compile all targets
+        run: |
+          mkdir -p dist
+          # name:zig-target[:extra-flags]
+          #   arm  = armv7 soft-float ABI -> runs on every arm32 (soft & hard
+          #          float) Linux and OpenWRT device.
+          targets="
+            x86_64:x86_64-linux-musl
+            x86:x86-linux-musl
+            aarch64:aarch64-linux-musl
+            arm:arm-linux-musleabi
+            riscv64:riscv64-linux-musl
+            mips:mips-linux-musleabi:-msoft-float
+            mipsel:mipsel-linux-musleabi:-msoft-float
+          "
+          for t in $targets; do
+            name=$(echo "$t" | cut -d: -f1)
+            tgt=$(echo "$t" | cut -d: -f2)
+            extra=$(echo "$t" | cut -d: -f3)
+            echo "==> $name ($tgt) $extra"
+            zig cc -target "$tgt" $CFLAGS $extra $SRC -pthread -static -o bmkd
+            tar -czf "dist/bmkd-linux-$name.tar.gz" bmkd conf.txt README.md LICENSE
+            rm bmkd
+          done
+
+      - uses: actions/upload-artifact@v4
+        with: { name: linux, path: dist/* }
+
+  # ---------------------------------------------------------------------------
+  # Windows x86_64 — mingw-w64 with the POSIX thread model (winpthreads).
+  # ---------------------------------------------------------------------------
+  windows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y cmake gcc-mingw-w64-x86-64-posix
+      - name: Generate embedded web headers (host build)
+        run: |
+          cmake -S . -B build-host
+          cmake --build build-host --target bmkd -j
+          cp -r build-host/generated generated
+      - name: Build bmkd.exe (static)
+        run: |
+          mkdir -p dist
+          x86_64-w64-mingw32-gcc-posix $CFLAGS $SRC -pthread -static -lws2_32 -o bmkd.exe
+          zip -j dist/bmkd-windows-x86_64.zip bmkd.exe conf.txt README.md LICENSE
+      - uses: actions/upload-artifact@v4
+        with: { name: windows, path: dist/* }
+
+  # ---------------------------------------------------------------------------
+  # macOS universal (arm64 + x86_64), built natively.
+  # ---------------------------------------------------------------------------
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate embedded web headers (host build)
+        run: |
+          cmake -S . -B build-host
+          cmake --build build-host --target bmkd -j
+          cp -r build-host/generated generated
+      - name: Build universal binary
+        run: |
+          mkdir -p dist
+          clang -arch arm64 -arch x86_64 $CFLAGS $SRC -pthread -o bmkd
+          tar -czf dist/bmkd-macos-universal.tar.gz bmkd conf.txt README.md LICENSE
+      - uses: actions/upload-artifact@v4
+        with: { name: macos, path: dist/* }
+
+  # ---------------------------------------------------------------------------
+  # Collect every artifact and publish them to the Release for this tag.
+  # ---------------------------------------------------------------------------
+  release:
+    needs: [linux, windows, macos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v4        # needed for `git archive` of the source
+      - uses: actions/download-artifact@v4
+        with: { path: artifacts }
+      - name: Assemble assets (binaries + source archives + checksums)
+        run: |
+          mkdir -p out
+          find artifacts -type f -exec cp {} out/ \;
+          # reproducible source snapshots of the tagged tree (tracked files only,
+          # so build output and the git-ignored local docs are excluded)
+          VER="${GITHUB_REF_NAME#v}"
+          git archive --format=tar.gz --prefix="bmkd-$VER/" -o "out/bmkd-$VER-src.tar.gz" HEAD
+          git archive --format=zip    --prefix="bmkd-$VER/" -o "out/bmkd-$VER-src.zip"    HEAD
+          (cd out && sha256sum * > SHA256SUMS.txt)
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: out/*
+          generate_release_notes: true
