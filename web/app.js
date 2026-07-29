@@ -697,6 +697,7 @@ initTheme();
 function closeNav() { document.body.classList.remove("nav-open"); }
 $("navToggle").onclick = () => document.body.classList.toggle("nav-open");
 $("navBackdrop").onclick = closeNav;
+$("sideClose").onclick = closeNav;   // hamburger inside the drawer (mobile) closes it
 
 // top-right app menu + import bookmarks
 $("appmenuBtn").onclick = (e) => { e.stopPropagation(); $("appmenuList").hidden = !$("appmenuList").hidden; };
