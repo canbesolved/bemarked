@@ -487,6 +487,34 @@ button:hover { border-color: var(--accent); }
 }
 #saveBtn:hover, #shortcutForm button[type="submit"]:hover { background: var(--accent-hover); }
 
+/* custom folder autocomplete dropdown (matches the sidebar folder list) */
+.field { position: relative; }
+.suggest {
+  position: absolute;
+  left: 0; right: 0;
+  top: calc(100% + 2px);
+  z-index: 40;
+  max-height: 220px;
+  overflow: auto;                 /* vertical + horizontal scroll (long paths) */
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px #0005;
+}
+.suggest[hidden] { display: none; }
+.suggest-item {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .4rem .6rem;
+  cursor: pointer;
+  white-space: nowrap;
+  width: max-content;             /* grow to the path; container scrolls */
+  min-width: 100%;                /* but fill the width so the highlight spans it */
+}
+.suggest-item:hover { background: var(--surface-2); }
+.suggest-item .ic-folder { flex: none; color: var(--muted); }
+
 #confirmMsg { margin: 0 0 .4rem; }
 .danger-btn { background: var(--danger); color: #fff; border-color: var(--danger); }
 .danger-btn:hover { filter: brightness(.93); border-color: var(--danger); }
