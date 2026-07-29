@@ -109,8 +109,10 @@ crash-safe (temp → fsync → atomic rename, keeping one `.bak`).
 
 ### Import browser bookmarks
 
-bemarked reads exported browser bookmarks — the **Netscape Bookmark File** format that Chrome,
-Firefox, Edge, and Safari all produce. Two ways to import:
+bemarked reads exported browser bookmarks — the standard HTML format that Chrome,
+Firefox, Edge, and Safari all produce. 
+
+Two ways to import:
 
 - **Web UI** — **⋮ menu** (top-right) → **Import bookmarks**, then pick the exported `.html` file.
 - **CLI** — `./bmkd convert bookmarks.html` writes a `bookmarks.txt`.
@@ -129,7 +131,7 @@ Firefox, Edge, and Safari all produce. Two ways to import:
 - Add authentication
 - Add TLS support
 - Add hotkeys / keyboard navigation + vim style navigation
-- System tray icon (Windows / macOS / Linux) as an optional, build-time module — left-click opens the browser, right-click menu (Open in browser, Exit)
+- System tray icon (Windows / macOS / Linux) as an optional, build-time module
 - Create native packages for Debian, Fedora, Arch
 - Add to Flathub and Snap
 
@@ -141,7 +143,7 @@ To my beloved **Wife**, for her unwavering love and support.
 ## Support
 
 bemarked is free and open source. If you find it useful, please consider supporting its
-development — it helps a lot and is hugely appreciated.
+development — it helps a lot and is sincerely appreciated.
 
 Thank you!
 
