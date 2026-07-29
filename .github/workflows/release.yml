@@ -1,10 +1,7 @@
 name: Release
 
-# Build binaries for every supported target and attach them to the GitHub
-# Release when a version tag (vX.Y.Z) is pushed. Also runnable manually.
-#
-# The static musl Linux binaries below run unmodified on OpenWRT (same arch) —
-# OpenWRT is just Linux + musl, and these carry no libc dependency.
+# Build binaries for every supported target and attach them to the GitHub Release
+# when a version tag (vX.Y.Z) is pushed
 on:
   push:
     tags: ['v*']
@@ -19,6 +16,7 @@ env:
 
 jobs:
   # Linux, OpenWRT, RISC-V SBCs (static musl) via zig cc
+  # Archs: x86_64, x86, aarch64, arm, riscv64, mips, mipsel
   linux:
     runs-on: ubuntu-latest
     steps:
@@ -61,6 +59,13 @@ jobs:
             tar -czf "dist/bmkd-linux-$name.tar.gz" bmkd conf.txt README.md LICENSE
             rm bmkd
           done
+
+      - name: Build Android/Termux (bionic, via NDK)
+        run: |
+          CLANG="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
+          "$CLANG" $CFLAGS $SRC -pthread -s -Wl,--gc-sections -o bmkd-termux-aarch64
+          tar -czf dist/bmkd-termux-aarch64.tar.gz bmkd-termux-aarch64 conf.txt README.md LICENSE
+          rm bmkd-termux-aarch64
 
       - uses: actions/upload-artifact@v4
         with: { name: linux, path: dist/* }
