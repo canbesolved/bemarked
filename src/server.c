@@ -15,6 +15,7 @@
 #include "arrow_icon_svg.h"
 #include "arrow_down_icon_svg.h"
 #include "add_icon_svg.h"
+#include "app_icon_svg.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -347,6 +348,10 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
     }
     if (is_get && mg_strcmp(hm->uri, mg_str("/assets/add_icon.svg")) == 0) {
         serve_asset(c, "image/svg+xml", add_icon_svg, add_icon_svg_len);
+        return;
+    }
+    if (is_get && mg_strcmp(hm->uri, mg_str("/assets/app_icon.svg")) == 0) {
+        serve_asset(c, "image/svg+xml", app_icon_svg, app_icon_svg_len);
         return;
     }
 
