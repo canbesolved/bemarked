@@ -6,8 +6,6 @@
 
 <p align="center"><em>Your private bookmarks manager that works simply and easily for you.</em></p>
 
----
-
 ## About project
 
 **bemarked** (short name `bmkd / bookmarks daemon`) is a lightweight, self-hosted, private bookmarks manager:
