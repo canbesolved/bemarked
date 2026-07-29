@@ -14,7 +14,6 @@ static void defaults(struct config *c) {
     c->port = 7773;
     snprintf(c->bind, sizeof(c->bind), "127.0.0.1");
     c->bookmarks_file[0] = '\0';   /* empty => main defaults it next to the binary */
-    c->tray_icon = 1;
     c->shortcuts_per_row = 7;
     snprintf(c->link_open_mode, sizeof(c->link_open_mode), "new-tab");
 }
@@ -88,8 +87,6 @@ int config_load(const char *path, struct config *out) {
             snprintf(out->bind, sizeof(out->bind), "%s", val);
         } else if (strcmp(key, "bookmarks_file") == 0) {
             snprintf(out->bookmarks_file, sizeof(out->bookmarks_file), "%s", val);
-        } else if (strcmp(key, "tray_icon") == 0) {
-            out->tray_icon = (strcmp(val, "enable") == 0);
         } else if (strcmp(key, "shortcuts_per_row") == 0) {
             out->shortcuts_per_row = atoi(val);
         } else if (strcmp(key, "link_open_mode") == 0) {

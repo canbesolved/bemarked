@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
     printf("bmkd listening on http://%s:%d  (Ctrl-C to quit)\n", cfg.bind, cfg.port);
     fflush(stdout);
 
-    platform_run(cfg.tray_icon, cfg.port);
+    platform_run();
 
     printf("\nbmkd: shutting down\n");
     server_stop(srv);
