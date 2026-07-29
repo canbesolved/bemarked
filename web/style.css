@@ -84,6 +84,11 @@ body.resizing { user-select: none; cursor: col-resize; }
   overflow: auto;                       /* vertical + horizontal scroll (long folder names) */
   -webkit-overflow-scrolling: touch;    /* momentum scrolling on touch */
   padding: .75rem;
+  container-type: inline-size;          /* enable width queries for the header */
+}
+/* hide the title once the resized sidebar is too narrow for the + Add button */
+@container (max-width: 215px) {
+  .side-head h1 { display: none; }
 }
 .side-head {
   display: flex;
