@@ -16,7 +16,6 @@ struct config {
     int  port;              /* default 7773 */
     char bind[64];          /* default "127.0.0.1" */
     char bookmarks_file[512];   /* path to bookmarks.txt (default: next to the binary) */
-    int  tray_icon;         /* 1 = enable, 0 = disable */
     int  shortcuts_per_row;
     char link_open_mode[16];  /* "new-tab" (default) | "same-tab" */
     struct shortcut shortcuts[BMKD_MAX_SHORTCUTS];
