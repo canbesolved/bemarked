@@ -127,6 +127,7 @@ button:hover { border-color: var(--accent); }
   padding: 0; line-height: 1;
   display: inline-flex; align-items: center; justify-content: center;
 }
+#navToggle { border: none; background: transparent; }   /* no circle around the hamburger */
 
 /* top-right app menu (kebab) */
 #appmenu { position: fixed; top: .5rem; right: .6rem; z-index: 25; }
