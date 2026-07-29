@@ -115,20 +115,24 @@ Firefox, Edge, and Safari all produce. Two ways to import:
 - **Web UI** — **⋮ menu** (top-right) → **Import bookmarks**, then pick the exported `.html` file.
 - **CLI** — `./bmkd convert bookmarks.html` writes a `bookmarks.txt`.
 
+## TODO
+- Test on different platforms
+- Benchmark memory/disk footprint and publish measured numbers
+- Benchmark with 10k bookmarks, check the RAM and CPU load
+- Create systemd service files
+- Create documentation
+- Record a screencast
+
 ## Roadmap
 
 - Browser addons (Firefox, Chrome)
 - Add authentication
 - Add TLS support
 - Add hotkeys / keyboard navigation + vim style navigation
-- Create documentation
-- Test on different platforms
 - System tray icon (Windows / macOS / Linux) as an optional, build-time module — left-click opens the browser, right-click menu (Open in browser, Exit)
-- Add 'autostart' option for all platforms (scripts, systemd service file)
-- Benchmark with 10k-30k bookmarks, check the RAM and CPU load
 - Create native packages for Debian, Fedora, Arch
 - Add to Flathub and Snap
-- Benchmark memory/disk footprint and publish measured numbers
+
 
 ## Dedications
 
