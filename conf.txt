@@ -11,5 +11,16 @@ shortcuts_per_row = 7
 
 # Shortcut definition
 # shortcut[N] = "name | #hex_color | url"
-shortcut[0] = "GitHub | #24292e | https://github.com"
-shortcut[1] = "Search | #4285f4 | https://duckduckgo.com"
+shortcut[0] = "DuckDuck Go | #DE5833 | https://duckduckgo.com"
+shortcut[1] = "Reddit | #FF4500 | https://reddit.com"
+shortcut[2] = "X.com | #000000 | https://x.com"
+shortcut[3] = "YouTube | #FF0000 | https://youtube.com"
+shortcut[4] = "GitHub | #000000 | https://github.com/"
+shortcut[5] = "Codeberg | #1c71d8 | https://codeberg.org/"
+shortcut[6] = "Distro Watch | #1F5C99 | https://distrowatch.com"
+shortcut[7] = "Debian | #A81D33 | https://debian.org"
+shortcut[8] = "Arch Linux | #1793D1 | https://archlinux.org"
+shortcut[9] = "Fedora | #3C6EB4 | https://getfedora.org/"
+shortcut[10] = "Linux Foundation | #003764 | https://linuxfoundation.org"
+shortcut[11] = "Apache Software Foundation | #D22128 | https://apache.org"
+shortcut[12] = "Open Source Initiative | #3DA639 | https://opensource.org"
