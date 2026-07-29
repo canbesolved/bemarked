@@ -120,16 +120,15 @@ Firefox, Edge, and Safari all produce. Two ways to import:
 
 ## Roadmap
 
+- Browser addons (Firefox, Chrome)
 - Add authentication
 - Add TLS support
 - Add hotkeys / keyboard navigation + vim style navigation
 - Create documentation
 - Test on different platforms
 - System tray icon (Windows / macOS / Linux) as an optional, build-time module — left-click opens the browser, right-click menu (Open in browser, Exit)
-- Add 'autostart' option for all platforms
-- Benchmark with 10.000 bookmarks or 30.000 bookmarks, check the ram and cpu load
-- Browser addons (Firefox, Chrome)
-- Add UI wrapper for android like regular app to run locally
+- Add 'autostart' option for all platforms (scripts, systemd service file)
+- Benchmark with 10k-30k bookmarks, check the RAM and CPU load
 - Create native packages for Debian, Fedora, Arch
 - Add to Flathub and Snap
 - Benchmark memory/disk footprint and publish measured numbers
