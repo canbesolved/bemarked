@@ -3,6 +3,8 @@
  * quoted strings are not truncated by inline # comments. */
 #include "config.h"
 
+#include "compat.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -175,9 +177,9 @@ static int config_save(const struct config *c) {
     }
     if (!wrote) write_shortcuts(out, c);
 
-    if (fflush(out) != 0 || fsync(fileno(out)) != 0) { fclose(out); unlink(tmp); return -1; }
+    if (bmkd_fsync(out) != 0) { fclose(out); unlink(tmp); return -1; }
     if (fclose(out) != 0) { unlink(tmp); return -1; }
-    if (rename(tmp, c->conf_path) != 0) { unlink(tmp); return -1; }
+    if (bmkd_rename(tmp, c->conf_path) != 0) { unlink(tmp); return -1; }
     return 0;
 }
 

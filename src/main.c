@@ -9,12 +9,12 @@
 #include "server.h"
 #include "platform.h"
 #include "import.h"
+#include "compat.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <unistd.h>
 
 /* Default bookmarks file: "bookmarks.txt" next to the bmkd binary (via argv[0]).
  * Falls back to the current directory if argv[0] has no path component. */
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
         return import_file(in, out);
     }
 
-    srand((unsigned)(time(NULL) ^ (long)getpid()));  /* for model_new_id */
+    srand((unsigned)(time(NULL) ^ bmkd_pid()));  /* for model_new_id */
 
     if (config_load(conf, &cfg) != 0) {
         fprintf(stderr, "bmkd: config file '%s' not found\n", conf);

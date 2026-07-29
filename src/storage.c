@@ -6,6 +6,7 @@
  * Write path: build full contents -> write bookmarks.txt.tmp (same dir) ->
  * fflush + fsync -> move old to bookmarks.txt.bak -> rename() over target. */
 #include "storage.h"
+#include "compat.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -91,13 +92,12 @@ static int flush_locked(struct storage *s) {
         if (fprintf(f, "%s\t%s\t%s\t%s\n", b->id, b->name, b->folder, b->url) < 0)
             goto fail;
     }
-    if (fflush(f) != 0) goto fail;
-    if (fsync(fileno(f)) != 0) goto fail;
+    if (bmkd_fsync(f) != 0) goto fail;
     if (fclose(f) != 0) return -1;
 
     /* keep previous good copy as .bak, then atomically replace */
-    if (access(s->path, F_OK) == 0) rename(s->path, s->bak);
-    if (rename(s->tmp, s->path) != 0) return -1;
+    if (access(s->path, F_OK) == 0) bmkd_rename(s->path, s->bak);
+    if (bmkd_rename(s->tmp, s->path) != 0) return -1;
     return 0;
 fail:
     fclose(f);

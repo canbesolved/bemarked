@@ -42,6 +42,7 @@ add_executable(bmkd
   src/storage.c
   src/server.c
   src/platform.c
+  src/compat.c            # POSIX/Windows portability shims
   src/import.c            # browser bookmarks HTML -> bookmarks (CLI + /import)
   deps/mongoose/mongoose.c   # Mongoose 7.22 (GPLv2 or commercial)
   ${WEB_GEN_HEADERS}
@@ -57,12 +58,10 @@ target_include_directories(bmkd PRIVATE
 target_compile_definitions(bmkd PRIVATE MG_MAX_RECV_SIZE=33554432)
 
 # --- Platform libraries ---
+# Threads are needed everywhere (on Windows this pulls in winpthreads when
+# building with mingw-w64's posix thread model).
+find_package(Threads REQUIRED)
+target_link_libraries(bmkd PRIVATE Threads::Threads)
 if(WIN32)
-  target_link_libraries(bmkd PRIVATE ws2_32)
-elseif(APPLE)
-  find_library(COCOA_LIB Cocoa)
-  target_link_libraries(bmkd PRIVATE ${COCOA_LIB})
-else()
-  find_package(Threads REQUIRED)
-  target_link_libraries(bmkd PRIVATE Threads::Threads)
+  target_link_libraries(bmkd PRIVATE ws2_32)   # Mongoose sockets
 endif()
