@@ -228,8 +228,8 @@ function canMoveFolder(from, to) {
   return !to.startsWith(from + "/");     // not into own descendant (to === from is ok: reorder)
 }
 function clearFolderMarks() {
-  document.querySelectorAll(".drop-into, .drop-before, .drop-after")
-    .forEach((el) => el.classList.remove("drop-into", "drop-before", "drop-after"));
+  document.querySelectorAll(".drop-into, .drop-before, .drop-after, .drop-root")
+    .forEach((el) => el.classList.remove("drop-into", "drop-before", "drop-after", "drop-root"));
 }
 async function moveFolder(from, to, before) {
   try { await api("POST", "/folders/move", { from, to, before }); await load(); }
@@ -316,7 +316,33 @@ function renderTree() {
   const tree = $("folderTree");
   tree.textContent = "";
   $("homepage").classList.toggle("active", state.folder === "");
+  wireRootDrop($("homepage"), tree);
   renderTreeInto(buildFolderTree(), tree, 0);
+}
+
+// Dropping a *sub*folder onto Homepage (or the empty tree area) reparents it to
+// the top level — the reliable way to reach root, since a row's middle = "nest".
+function wireRootDrop(home, tree) {
+  const isRootTarget = (el, e) =>
+    draggedFolder !== null && draggedFolder.includes("/") &&   // only subfolders
+    !(el === tree && e.target.closest(".folder-row"));         // rows own their zones
+  const over = (el) => (e) => {
+    if (!isRootTarget(el, e)) return;
+    e.preventDefault();
+    clearFolderMarks();
+    el.classList.add("drop-root");
+  };
+  const leave = (el) => (e) => { if (e.target === el) el.classList.remove("drop-root"); };
+  const drop = (el) => (e) => {
+    if (!isRootTarget(el, e)) return;
+    e.preventDefault();
+    const from = draggedFolder, leaf = from.split("/").pop();
+    clearFolderMarks();
+    cancelSpring();
+    if (canMoveFolder(from, leaf)) moveFolder(from, leaf, "");   // append at top level
+  };
+  home.ondragover = over(home); home.ondragleave = leave(home); home.ondrop = drop(home);
+  tree.ondragover = over(tree); tree.ondragleave = leave(tree); tree.ondrop = drop(tree);
 }
 
 // Populate the folder autocomplete datalist used by the new/edit form.
