@@ -613,6 +613,7 @@ function render() {
   $("searchWrap").hidden = folderView;   // hide search when viewing a folder
   $("shortcuts").hidden = browsing;
   $("appmenu").hidden = browsing;        // app menu only on the homepage
+  $("footer").hidden = browsing;         // footer only on the homepage
   if (browsing) {
     renderRows();   // toggles list/empty visibility based on results
   } else {
