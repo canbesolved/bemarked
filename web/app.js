@@ -320,15 +320,25 @@ function renderTree() {
 }
 
 // Populate the folder autocomplete datalist used by the new/edit form.
-function renderFolderOptions() {
-  const dl = $("folderOptions");
-  dl.textContent = "";
-  for (const path of folderSet()) {
-    const opt = document.createElement("option");
-    opt.value = path;
-    dl.appendChild(opt);
+// custom folder autocomplete for the new/edit form (looks like the sidebar tree)
+function showFolderSuggest() {
+  const box = $("folderSuggest");
+  const q = $("f-folder").value.toLowerCase();
+  const items = folderSet().filter((p) => p.toLowerCase().includes(q)).slice(0, 50);
+  box.textContent = "";
+  if (!items.length) { box.hidden = true; return; }
+  for (const path of items) {
+    const it = document.createElement("div");
+    it.className = "suggest-item";
+    it.appendChild(Object.assign(document.createElement("span"), { className: "ic ic-folder" }));
+    it.appendChild(Object.assign(document.createElement("span"), { className: "suggest-name", textContent: path }));
+    it.onmousedown = (e) => e.preventDefault();   // keep the input focused
+    it.onclick = () => { $("f-folder").value = path; box.hidden = true; $("f-url").focus(); };
+    box.appendChild(it);
   }
+  box.hidden = false;
 }
+function hideFolderSuggest() { $("folderSuggest").hidden = true; }
 
 // Pick a readable text color for a hex background (YIQ contrast).
 function textOn(bg) {
@@ -597,7 +607,6 @@ function renderRows() {
 //   folder view     : table only (search + shortcuts hidden)
 function render() {
   renderTree();
-  renderFolderOptions();
   const folderView = !!state.folder;
   const browsing = folderView || !!state.query;
   $("main").classList.toggle("browsing", browsing);
@@ -623,7 +632,7 @@ function openForm(b, presetFolder) {
   $("overlay").hidden = false;
   $("f-name").focus();
 }
-function closeForm() { $("overlay").hidden = true; $("form").reset(); }
+function closeForm() { $("overlay").hidden = true; $("form").reset(); hideFolderSuggest(); }
 
 async function submitForm(e) {
   e.preventDefault();
@@ -786,6 +795,9 @@ $("search").oninput = (e) => { state.query = e.target.value; render(); };
 $("newBtn").onclick = () => openForm(null);
 $("cancelBtn").onclick = closeForm;
 $("form").onsubmit = submitForm;
+$("f-folder").addEventListener("input", showFolderSuggest);
+$("f-folder").addEventListener("focus", showFolderSuggest);
+$("f-folder").addEventListener("blur", () => setTimeout(hideFolderSuggest, 150));
 $("overlay").onclick = (e) => { if (e.target === $("overlay")) closeForm(); };  // click backdrop to close
 
 // new-shortcut popup wiring + color/hex sync

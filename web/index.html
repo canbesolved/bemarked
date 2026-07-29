@@ -54,8 +54,10 @@
       <h2 id="f-title">New bookmark</h2>
       <input type="hidden" id="f-id">
       <input id="f-name" placeholder="Name" required>
-      <input id="f-folder" placeholder="Folder (e.g. dev/sources)" list="folderOptions" autocomplete="off">
-      <datalist id="folderOptions"></datalist>
+      <div class="field">
+        <input id="f-folder" placeholder="Folder (e.g. dev/sources)" autocomplete="off">
+        <div id="folderSuggest" class="suggest" hidden></div>
+      </div>
       <input id="f-url" placeholder="https://…" required>
       <div class="form-actions">
         <button type="submit" id="saveBtn">Save</button>
