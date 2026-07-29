@@ -16,7 +16,8 @@ permissions:
 env:
   # source files (keep in sync with CMakeLists.txt)
   SRC: "src/main.c src/config.c src/model.c src/storage.c src/server.c src/platform.c src/compat.c src/import.c deps/mongoose/mongoose.c"
-  CFLAGS: "-O2 -Isrc -Ideps/mongoose -Igenerated -DMG_MAX_RECV_SIZE=33554432"
+  # -ffunction-sections/-fdata-sections let the linker garbage-collect unused code
+  CFLAGS: "-O2 -ffunction-sections -fdata-sections -Isrc -Ideps/mongoose -Igenerated -DMG_MAX_RECV_SIZE=33554432"
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -60,7 +61,7 @@ jobs:
             tgt=$(echo "$t" | cut -d: -f2)
             extra=$(echo "$t" | cut -d: -f3)
             echo "==> $name ($tgt) $extra"
-            zig cc -target "$tgt" $CFLAGS $extra $SRC -pthread -static -o bmkd
+            zig cc -target "$tgt" $CFLAGS $extra $SRC -pthread -static -s -Wl,--gc-sections -o bmkd
             tar -czf "dist/bmkd-linux-$name.tar.gz" bmkd conf.txt README.md LICENSE
             rm bmkd
           done
@@ -84,7 +85,7 @@ jobs:
       - name: Build bmkd.exe (static)
         run: |
           mkdir -p dist
-          x86_64-w64-mingw32-gcc-posix $CFLAGS $SRC -pthread -static -lws2_32 -o bmkd.exe
+          x86_64-w64-mingw32-gcc-posix $CFLAGS $SRC -pthread -static -s -Wl,--gc-sections -lws2_32 -o bmkd.exe
           zip -j dist/bmkd-windows-x86_64.zip bmkd.exe conf.txt README.md LICENSE
       - uses: actions/upload-artifact@v4
         with: { name: windows, path: dist/* }
@@ -104,7 +105,8 @@ jobs:
       - name: Build universal binary
         run: |
           mkdir -p dist
-          clang -arch arm64 -arch x86_64 $CFLAGS $SRC -pthread -o bmkd
+          clang -arch arm64 -arch x86_64 $CFLAGS $SRC -pthread -Wl,-dead_strip -o bmkd
+          strip -x bmkd                                  # drop local symbols (Apple ld has no -s)
           tar -czf dist/bmkd-macos-universal.tar.gz bmkd conf.txt README.md LICENSE
       - uses: actions/upload-artifact@v4
         with: { name: macos, path: dist/* }
