@@ -166,7 +166,12 @@ int import_parse(const char *html, size_t len,
             }
             folder[pl] = '\0';
             snprintf(b.folder, sizeof(b.folder), "%s", folder);
-            if (b.name[0] == '\0') snprintf(b.name, sizeof(b.name), "%s", b.url);
+            if (b.name[0] == '\0') {
+                size_t un = strlen(b.url);
+                if (un >= sizeof(b.name)) un = sizeof(b.name) - 1;
+                memcpy(b.name, b.url, un);
+                b.name[un] = '\0';
+            }
             model_sanitize(&b);   /* id stays empty; caller assigns */
 
             if (b.url[0] == '\0' || !is_http(b.url)) {

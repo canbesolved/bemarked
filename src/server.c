@@ -24,7 +24,7 @@
 #include <pthread.h>
 
 #define MAX_BODY (64 * 1024)
-#define IMPORT_MAX (32 * 1024 * 1024)   /* bookmarks HTML can be several MB */
+#define IMPORT_MAX (32 * 1024 * 1024)   /* bookmarks HTML can be up to 32MB */
 
 struct server {
     struct mg_mgr mgr;
