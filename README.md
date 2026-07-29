@@ -1,8 +1,12 @@
-<img src="assets/app_icon.png" alt="bemarked logo" width="96" height="96">
+<p align="center">
+  <img src="assets/app_icon.png" alt="bemarked logo" width="96" height="96">
+</p>
 
-# bemarked (`bmkd`)
+<h1 align="center">bemarked (<code>bmkd</code>)</h1>
 
-*Your private bookmarks manager that works simply and easily for you.*
+<p align="center"><em>Your private bookmarks manager that works simply and easily for you.</em></p>
+
+---
 
 ## About project
 
