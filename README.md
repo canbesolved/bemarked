@@ -13,8 +13,7 @@ a single tiny C binary with human-readable plain-text (TSV) storage.
 
 No cloud, no accounts, no external requests.
 
-It follows the **Unix philosophy** — do one thing well, keep data as plain text, and
-compose with standard tools (`grep`, `awk`, `cut`) + HTTP API with JSON output.
+When creating it, I tried to adhere to the "unix philosophy": do one thing well, keep data as plain text, and compose with standard tools (grep, awk, cut) + I added HTTP API with JSON output. 
 
 ## Short story
 I’ve wanted to bring this project to life for a long time. In real-world use, when you frequently switch between different browsers and devices, bookmarks eventually get scattered around. On top of that, you need synchronization, quick access, straightforward backups, self-hosting/privacy options, and so on.
@@ -31,12 +30,10 @@ What I needed was a manager with a familiar interface, a clear and straightforwa
   </a>
 </p>
 
-<p align="center"><em>▶ Watch the demo on YouTube</em></p>
-
 ## Features
-- **Small size** — a single binary of just ~300 KB.
-- **Tab-separated plain text (TSV)** — bookmarks are stored as plain text in a human-readable format: easy to read, parse, sync (Syncthing, Rclone, Google Drive, Dropbox, etc.), compress, and back up.
-- **High-performance & lightweight** — near-zero CPU load; consumes only 5–10 MB of RAM (with 1000+ bookmarks).
+- **Small size** — a single binary of just up to ~300 KB.
+- **Tab-separated plain text (TSV)** — bookmarks are stored as plain text in a human-readable format: easy to read, parse, sync (syncthing, rclone, gdrive, dropbox, etc), compress, and backup.
+- **High-performance & lightweight** — near-zero CPU load; consumes only 5–10 MB of RAM (tested with 1000+ bookmarks).
 - **Cross-platform** — Linux / OpenWRT / SBC / Termux (x86_64, x86, arm, arm64, mips, mipsel, riscv64), Windows (x86_64), macOS (universal). Linux builds are static musl (no libc dependency), so the matching-arch binary drops straight onto an OpenWRT router.
 - **User-friendly interface** — a web UI with built-in fuzzy search, a homepage of shortcuts, and everything needed to manage folders and links.
 - **Responsive & mobile-friendly** — with light / dark themes (auto-switching).
@@ -133,13 +130,14 @@ Firefox, Edge, and Safari all produce. Two ways to import:
 - Add to Flathub and Snap
 - Benchmark memory/disk footprint and publish measured numbers
 
+## Dedications
+
+To my beloved wife, for her unwavering love and support.
+
 ## Support
 
 bemarked is free and open source. If you find it useful, please consider supporting its
-development — it helps a lot and is hugely appreciated:
-
-- ❤️ **[GitHub Sponsors](https://github.com/sponsors/canbesolved)**
-- 🧡 **[Patreon](https://www.patreon.com/c/CanBeSolved)**
+development — it helps a lot and is hugely appreciated.
 
 Thank you!
 

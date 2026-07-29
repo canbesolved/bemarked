@@ -11,18 +11,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write            # needed to create/update the Release
+  contents: write
 
 env:
-  # source files (keep in sync with CMakeLists.txt)
   SRC: "src/main.c src/config.c src/model.c src/storage.c src/server.c src/platform.c src/compat.c src/import.c deps/mongoose/mongoose.c"
-  # -ffunction-sections/-fdata-sections let the linker garbage-collect unused code
   CFLAGS: "-O2 -ffunction-sections -fdata-sections -Isrc -Ideps/mongoose -Igenerated -DMG_MAX_RECV_SIZE=33554432"
 
 jobs:
-  # ---------------------------------------------------------------------------
-  # Linux + OpenWRT + RISC-V SBCs (static musl) via zig cc — one job, all arches.
-  # ---------------------------------------------------------------------------
+  # Linux, OpenWRT, RISC-V SBCs (static musl) via zig cc
   linux:
     runs-on: ubuntu-latest
     steps:
@@ -69,9 +65,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: linux, path: dist/* }
 
-  # ---------------------------------------------------------------------------
-  # Windows x86_64 — mingw-w64 with the POSIX thread model (winpthreads).
-  # ---------------------------------------------------------------------------
+  # Windows x86_64 — mingw-w64 with the POSIX thread model (winpthreads)
   windows:
     runs-on: ubuntu-latest
     steps:
@@ -90,9 +84,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: windows, path: dist/* }
 
-  # ---------------------------------------------------------------------------
-  # macOS universal (arm64 + x86_64), built natively.
-  # ---------------------------------------------------------------------------
+  # macOS universal (arm64 + x86_64)
   macos:
     runs-on: macos-latest
     steps:
@@ -111,15 +103,12 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: macos, path: dist/* }
 
-  # ---------------------------------------------------------------------------
-  # Collect every artifact and publish them to the Release for this tag.
-  # ---------------------------------------------------------------------------
   release:
     needs: [linux, windows, macos]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: actions/checkout@v4        # needed for `git archive` of the source
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { path: artifacts }
       - name: Assemble assets (binaries + source archives + checksums)
