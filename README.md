@@ -132,7 +132,7 @@ Firefox, Edge, and Safari all produce. Two ways to import:
 
 ## Dedications
 
-To my beloved wife, for her unwavering love and support.
+To my beloved **Wife**, for her unwavering love and support.
 
 ## Support
 
