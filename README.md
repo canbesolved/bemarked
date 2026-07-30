@@ -2,18 +2,14 @@
   <img src="assets/app_icon.png" alt="bemarked logo" width="96" height="96">
 </p>
 
-<h1 align="center">bemarked (<code>bmkd</code>)</h1>
+<h1 align="center">Bemarked (bmkd)</h1>
 
-<p align="center"><em>Your private bookmarks manager that works simply and easily for you.</em></p>
+<p align="center"><em>Your private bookmark manager that works simply and easily for you.</em></p>
 
 ## About project
 
-**bemarked** (short name `bmkd / bookmarks daemon`) is a lightweight, self-hosted, private bookmarks manager:
-a single tiny C binary with human-readable plain-text (TSV) storage. 
-
-No cloud, no accounts, no external requests.
-
-When creating it, I tried to adhere to the "unix philosophy": do one thing well, keep data as plain text, and compose with standard tools (grep, awk, cut) + I added HTTP API with JSON output. 
+**Bemarked** (short name `bmkd / bookmarks daemon`) is a lightweight, self-hosted, private bookmark manager:
+a single binary with built-in web-server, web UI and human-readable plain-text (TSV) storage format. No cloud, no accounts.
 
 ## Short story
 I’ve wanted to bring this project to life for a long time. In real-world use, when you frequently switch between different browsers and devices, bookmarks eventually get scattered around. On top of that, you need synchronization, quick access, straightforward backups, self-hosting/privacy options, and so on.
@@ -21,6 +17,8 @@ I’ve wanted to bring this project to life for a long time. In real-world use, 
 I looked into existing bookmark managers, ranging from feature-rich tools to minimalist ones. The comprehensive solutions solved the core problem, but were heavily bloated with extra features: setup required a dedicated server or Docker, and everything was stored in a complex database. The simple ones, on the other hand, often had rather niche implementations.
 
 What I needed was a manager with a familiar interface, a clear and straightforward architecture, and the ability to access a bookmark even with just a plain text editor at hand. Having used Linux and other open-source projects like OpenWrt for years, I knew things could be kept simple. After gathering these ideas and structuring the architecture, this project was born.
+
+When creating it, I tried to adhere to the "unix philosophy": do one thing well, keep data as plain text, and compose with standard tools (grep, awk, cut) + I added HTTP API with JSON output. 
 
 ## Demo
 
@@ -31,15 +29,14 @@ What I needed was a manager with a familiar interface, a clear and straightforwa
 </p>
 
 ## Features
-- **Small size** — a single binary of just up to ~300 KB.
-- **Tab-separated plain text (TSV)** — bookmarks are stored as plain text in a human-readable format: easy to read, parse, sync (syncthing, rclone, gdrive, dropbox, etc), compress, and backup.
+- **Small size** — a single binary under ~300 KB.
+- **Tab-separated plain text format (TSV)** — bookmarks are stored as plain text: easy to read, parse, sync (syncthing, rclone, gdrive, dropbox, etc), compress, and backup. Also it's 10× more compact than a browser's exported `bookmarks.html`
 - **High-performance & lightweight** — near-zero CPU load; consumes only 5–10 MB of RAM (tested with 1000+ bookmarks).
-- **Cross-platform** — Linux / OpenWRT / SBC / Termux (x86_64, x86, arm, arm64, mips, mipsel, riscv64), Windows (x86_64), macOS (universal). Linux builds are static musl (no libc dependency), so the matching-arch binary drops straight onto an OpenWRT router.
-- **User-friendly interface** — a web UI with built-in fuzzy search, a homepage of shortcuts, and everything needed to manage folders and links.
-- **Responsive & mobile-friendly** — with light / dark themes (auto-switching).
-- **Drag-and-drop** — organize shortcuts, folders, and bookmarks, with touch/pen support.
-- **Plain-text & offline** — one greppable `bookmarks.txt`, no external requests, 10× more compact than a browser's exported `bookmarks.html`, with crash-safe atomic writes.
-- **Portable** — one binary, one plain-text config file, one bookmarks file. Simple.
+- **Cross-platform** — Linux / Windows / MacOS / OpenWRT / SBC / Android/Termux (x86_64, x86, arm, arm64, mips, mipsel, riscv64)
+- **Simple interface** — a web UI with built-in fuzzy search, a homepage for shortcuts, and everything needed to manage folders and links
+- **Responsive UI** — works on mobile, with light / dark themes (auto-switching).
+- **Drag-and-drop support** — organize shortcuts, folders, and bookmarks with touch/pen support.
+- **Portable** — one binary, one config file, one bookmarks file. 
 
 ## Getting started
 
@@ -109,7 +106,7 @@ crash-safe (temp → fsync → atomic rename, keeping one `.bak`).
 
 ### Import browser bookmarks
 
-bemarked reads exported browser bookmarks — the standard HTML format that Chrome,
+**Bemarked** reads exported browser bookmarks — the standard HTML format that Chrome,
 Firefox, Edge, and Safari all produce. 
 
 Two ways to import:
@@ -118,12 +115,11 @@ Two ways to import:
 - **CLI** — `./bmkd convert bookmarks.html` writes a `bookmarks.txt`.
 
 ## TODO
+
 - Test on different platforms
-- Benchmark memory/disk footprint and publish measured numbers
-- Benchmark with 10k bookmarks, check the RAM and CPU load
-- Create systemd service files
-- Create documentation
-- Record a screencast
+- Benchmark with 10k bookmarks, check the RAM and CPU load and publish measured numbers
+- Add documentation
+- Add a screencast guide
 
 ## Roadmap
 
@@ -142,7 +138,7 @@ To my beloved **Wife**, for her unwavering love and support.
 
 ## Support
 
-bemarked is free and open source. If you find it useful, please consider supporting its
+**Bemarked** is free and open source. If you find it useful, please consider supporting its
 development — it helps a lot and is sincerely appreciated.
 
 Thank you!
