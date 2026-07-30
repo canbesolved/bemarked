@@ -11,7 +11,7 @@
 **Bemarked** (short name `bmkd / bookmarks daemon`) is a lightweight, self-hosted, private bookmark manager:
 a single binary with built-in web-server, web UI and human-readable plain-text (TSV) storage format. No cloud, no accounts.
 
-### Short story
+### Background
 I’ve wanted to bring this project to life for a long time. In real-world use, when you frequently switch between different browsers and devices, bookmarks eventually get scattered around. On top of that, you need synchronization, quick access, straightforward backups, self-hosting/privacy options, and so on.
 
 I looked into existing bookmark managers, ranging from feature-rich tools to minimalist ones. The comprehensive solutions solved the core problem, but were heavily bloated with extra features: setup required a dedicated server or Docker, and everything was stored in a complex database. The simple ones, on the other hand, often had rather niche implementations.
@@ -115,16 +115,21 @@ Two ways to import:
 
 ## TODO
 
+- Add ToC
 - Test on different platforms
 - Benchmark with 10k bookmarks, check the RAM and CPU load and publish measured numbers
 - Add documentation
 - Add a screencast guide
+- Add funding section
+- Add badges
+- Add live demo
 
 ## Roadmap
 
 - Browser addons (Firefox, Chrome)
 - Add authentication
 - Add TLS support
+- Add Docker support
 - Add hotkeys / keyboard navigation + vim style navigation
 - System tray icon (Windows / macOS / Linux) as an optional, build-time module
 - Create native packages for Debian, Fedora, Arch
