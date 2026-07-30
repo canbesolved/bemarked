@@ -1,24 +1,22 @@
 <p align="center">
-  <img src="assets/app_icon.png" alt="bemarked logo" width="96" height="96">
+  <img src="assets/app_icon.png" alt="Bemarked logo" width="96" height="96">
 </p>
 
 <h1 align="center">Bemarked (bmkd)</h1>
 
 <p align="center"><em>Your private bookmark manager that works simply and easily for you.</em></p>
 
-## About project
+## About this project
 
 **Bemarked** (short name `bmkd / bookmarks daemon`) is a lightweight, self-hosted, private bookmark manager:
 a single binary with built-in web-server, web UI and human-readable plain-text (TSV) storage format. No cloud, no accounts.
 
-## Short story
+### Short story
 I’ve wanted to bring this project to life for a long time. In real-world use, when you frequently switch between different browsers and devices, bookmarks eventually get scattered around. On top of that, you need synchronization, quick access, straightforward backups, self-hosting/privacy options, and so on.
 
 I looked into existing bookmark managers, ranging from feature-rich tools to minimalist ones. The comprehensive solutions solved the core problem, but were heavily bloated with extra features: setup required a dedicated server or Docker, and everything was stored in a complex database. The simple ones, on the other hand, often had rather niche implementations.
 
-What I needed was a manager with a familiar interface, a clear and straightforward architecture, and the ability to access a bookmark even with just a plain text editor at hand. Having used Linux and other open-source projects like OpenWrt for years, I knew things could be kept simple. After gathering these ideas and structuring the architecture, this project was born.
-
-When creating it, I tried to adhere to the "unix philosophy": do one thing well, keep data as plain text, and compose with standard tools (grep, awk, cut) + I added HTTP API with JSON output. 
+What I needed was a manager with a familiar interface, a clear and straightforward architecture, and the ability to access a bookmark even with just a plain text editor at hand. Having used Linux and other open-source projects like OpenWrt for years, I knew things could be kept simple. When creating it, I tried to adhere to the "unix philosophy": do one thing well, keep data as plain text, and compose with standard tools (grep, awk, cut). After gathering these ideas and structuring the architecture, this project was born.
 
 ## Demo
 
@@ -35,8 +33,9 @@ When creating it, I tried to adhere to the "unix philosophy": do one thing well,
 - **Cross-platform** — Linux / Windows / MacOS / OpenWRT / SBC / Android/Termux (x86_64, x86, arm, arm64, mips, mipsel, riscv64)
 - **Simple interface** — a web UI with built-in fuzzy search, a homepage for shortcuts, and everything needed to manage folders and links
 - **Responsive UI** — works on mobile, with light / dark themes (auto-switching).
-- **Drag-and-drop support** — organize shortcuts, folders, and bookmarks with touch/pen support.
-- **Portable** — one binary, one config file, one bookmarks file. 
+- **Drag-and-drop** — organize shortcuts, folders, and bookmarks with touch/pen support.
+- **Portable** — one binary, one config file and one bookmarks file.
+- **HTTP REST API** - with JSON output. The backend supports all the necessary features for managing bookmarks via API.
 
 ## Getting started
 
@@ -50,7 +49,7 @@ tar -xzf bmkd-linux-x86_64.tar.gz      # or:  unzip bmkd-windows-x86_64.zip
 ```
 
 Then open **http://127.0.0.1:7773** in your browser. Each archive bundles the binary, a
-sample `conf.txt`, `README.md`, and `LICENSE`. By default bemarked listens on localhost
+sample `conf.txt`, `README.md`, and `LICENSE`. By default Bemarked listens on localhost
 only — set `bind = "0.0.0.0"` in `conf.txt` to reach it from other devices on your LAN.
 
 Prefer to build from source? Mongoose is already vendored in `deps/mongoose/`:
@@ -63,7 +62,7 @@ cmake --build build
 
 ### 2. Configuration — `conf.txt`
 
-Simple `key = value` lines; `#` starts a comment. bemarked reads `conf.txt` from next to the
+Simple `key = value` lines; `#` starts a comment. Bemarked reads `conf.txt` from next to the
 binary, or pass a path explicitly: `./bmkd /path/to/conf.txt`.
 
 | Key | Default | Meaning |
@@ -131,21 +130,18 @@ Two ways to import:
 - Create native packages for Debian, Fedora, Arch
 - Add to Flathub and Snap
 
-
 ## Dedications
 
-To my beloved **Wife**, for her unwavering love and support.
+To my beloved **Wife** ♥️, for her unwavering love and support.
 
 ## Support
 
 **Bemarked** is free and open source. If you find it useful, please consider supporting its
 development — it helps a lot and is sincerely appreciated.
 
-Thank you!
-
 ## License
 
-**bemarked is licensed under GPLv2-only** (see `LICENSE`); source files carry
+**Bemarked is licensed under GPLv2-only** (see `LICENSE`); source files carry
 `SPDX-License-Identifier: GPL-2.0-only`. This matches Mongoose, which is dual-licensed
 **GPLv2 or commercial** — because the binary links Mongoose, a permissive redistribution
 (MIT/Apache) would require either a commercial Mongoose license or swapping Mongoose for a
