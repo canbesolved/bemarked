@@ -226,7 +226,7 @@ button:hover { border-color: var(--accent); }
 .folder-row.dragging { opacity: .4; }
 .folder-row.drop-into { outline: 2px solid var(--accent); outline-offset: -2px; }
 /* "move to top level" target: Homepage button or empty tree area */
-.drop-root { background: var(--surface-2); border-radius: 6px; }
+.drop-root { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 6px; }
 /* straight insertion line centered in a gap; adjacent folders push apart */
 .folder-row.drop-before { margin-top: 8px; }
 .folder-row.drop-after { margin-bottom: 8px; }

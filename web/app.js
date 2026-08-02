@@ -1,18 +1,26 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// bmkd SPA logic. Served same-origin at /app.js (embedded in the binary).
-// Thin client: renders + navigates; the backend is authoritative for data/search.
+// BMKD web UI logic (SPA).
+// Works as a thin client: rendering and navigation are handled on the frontend, while the backend is used for data and search.
 
+// UI states
 const $ = (id) => document.getElementById(id);
-const state = { bookmarks: [], folder: "", query: "", expanded: new Set(), openItems: new Set() };
-let openInNewTab = true;   // set from config's link_open_mode
-let dragIndex = null;      // shortcut being dragged (for reorder)
-let draggedFolder = null;  // folder path being dragged (for reparent)
-let draggedBookmark = null; // bookmark being dragged (to move into a folder)
-let hoverFolder = null, hoverTimer = null;   // spring-load: auto-expand on hover
+const state = { 
+  bookmarks: [],         // all bookmarks loaded from backend
+  folder: "",            // currently selected folder
+  query: "",             // current search query
+  expanded: new Set(),   // set of expanded folder paths in the tree
+  openItems: new Set()   // set of open (active) bookmark items
+};
+let openInNewTab = true;      // open links in a new tab (or same tab if false)
+let dragIndex = null;         // bookmark index for dragging
+let draggedFolder = null;     // path of dragged folder
+let draggedBookmark = null;   // id or data for dragged bookmark
+let hoverFolder = null,       // currently spring-loaded (hovered) folder
+    hoverTimer = null;        // timer for spring-loading folders
 
-// While dragging, hovering a collapsed folder with children expands it after 1s.
+// While dragging, hovering a collapsed folder with children expands it after 1 second delay.
 function springLoad(path, hasKids, expanded) {
-  if (path === hoverFolder) return;   // same folder: timer already running
+  if (path === hoverFolder) return;
   hoverFolder = path;
   clearTimeout(hoverTimer);
   hoverTimer = null;
@@ -24,22 +32,49 @@ function springLoad(path, hasKids, expanded) {
     }, 750);
   }
 }
-function cancelSpring() { clearTimeout(hoverTimer); hoverTimer = null; hoverFolder = null; }
 
+// Cancel the folder spring-load timer and reset the hover state.
+function cancelSpring() {
+  clearTimeout(hoverTimer);
+  hoverTimer = null;
+  hoverFolder = null;
+}
+
+// Opens the given URL in a new tab or the same tab based on openInNewTab setting.
 function openLink(url) {
   if (openInNewTab) window.open(url, "_blank", "noopener");
   else window.location.href = url;   // same tab
 }
 
-// --- data ---
+// Makes an HTTP request to the backend API and returns parsed JSON result.
 async function api(method, path, body) {
-  const opt = { method, headers: {} };
-  if (body !== undefined) { opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body); }
-  const res = await fetch(path, opt);
-  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.status);
-  return res.status === 200 || res.status === 201 ? res.json() : null;
+  const options = { 
+    method, 
+    headers: {} 
+  };
+
+  if (body !== undefined) {
+    options.headers["Content-Type"] = "application/json";
+    options.body = JSON.stringify(body);
+  }
+
+  const response = await fetch(path, options);
+
+  let errorText = res => res.json().catch(() => ({}));
+
+  if (!response.ok) {
+    // Try to extract error message from the response, fallback to HTTP status code
+    throw new Error((await errorText(response)).error || response.status);
+  }
+
+  // Only attempt to parse JSON on 200/201
+  if (response.status === 200 || response.status === 201) {
+    return response.json();
+  }
+  return null;
 }
 
+// Loads all bookmarks from the backend API and triggers a UI render.
 async function load() {
   state.bookmarks = await api("GET", "/bookmarks");
   render();
@@ -330,7 +365,7 @@ function wireRootDrop(home, tree) {
     if (!isRootTarget(el, e)) return;
     e.preventDefault();
     clearFolderMarks();
-    el.classList.add("drop-root");
+    if (el === home) el.classList.add("drop-root");
   };
   const leave = (el) => (e) => { if (e.target === el) el.classList.remove("drop-root"); };
   const drop = (el) => (e) => {
