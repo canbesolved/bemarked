@@ -81,11 +81,17 @@ body.resizing { user-select: none; cursor: col-resize; }
 #side {
   border-right: 1px solid var(--border);
   background: var(--surface);
-  overflow: auto;                       /* vertical + horizontal scroll (long folder names) */
-  -webkit-overflow-scrolling: touch;    /* momentum scrolling on touch */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
   padding: .75rem;
-  container-type: inline-size;          /* enable width queries for the header */
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
 }
+
+/* the tree fills the rest of the sidebar: the empty area under the last folder
+   is a drop target, not dead space */
+#folderTree { flex: 1 1 auto; }
 /* hide the title once the resized sidebar is too narrow for the + Add button */
 @container (max-width: 215px) {
   .side-head h1 { display: none; }

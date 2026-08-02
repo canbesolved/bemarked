@@ -28,9 +28,30 @@ function springLoad(path, hasKids, expanded) {
     hoverTimer = setTimeout(() => {
       hoverTimer = null;
       state.expanded.add(path);
-      renderTree();
+      expandRowInPlace(path);
     }, 750);
   }
+}
+
+// The tree row for a folder path
+function folderRow(path) {
+  return $("folderTree").querySelector('.folder-row[data-path="' + CSS.escape(path) + '"]');
+}
+
+// Expand `path` by splicing its child rows in rather than re-rendering the tree
+function expandRowInPlace(path) {
+  const row = folderRow(path);
+  if (!row) { renderTree(); return; }
+  let map = buildFolderTree();
+  for (const part of path.split("/")) {
+    if (!map[part]) return;
+    map = map[part].children;
+  }
+  const frag = document.createDocumentFragment();
+  renderTreeInto(map, frag, path.split("/").length);
+  row.after(frag);
+  const ic = row.querySelector(".folder-caret .ic");
+  if (ic) ic.className = "ic ic-arrow-down";
 }
 
 // Cancel the folder spring-load timer and reset the hover state.
@@ -191,7 +212,7 @@ function renderTreeInto(map, container, depth) {
       caret.appendChild(cic);
       caret.onclick = (e) => {
         e.stopPropagation();
-        if (expanded) state.expanded.delete(path); else state.expanded.add(path);
+        if (state.expanded.has(path)) state.expanded.delete(path); else state.expanded.add(path);
         renderTree();
       };
     }
@@ -233,7 +254,9 @@ function renderTreeInto(map, container, depth) {
       row.appendChild(wrap);
     }
 
-    // drag to reparent (native DnD); separator/highlight shows the drop position
+    // drag to reorder: the folder lands exactly where the separator is drawn,
+    // and no separator is drawn where nothing would happen
+    row.dataset.path = path;
     row.draggable = true;
     row.ondragstart = (e) => {
       e.stopPropagation();
@@ -246,48 +269,40 @@ function renderTreeInto(map, container, depth) {
     };
     row.ondragend = () => { row.classList.remove("dragging"); clearFolderMarks(); cancelSpring(); draggedFolder = null; };
     row.ondragover = (e) => {
-      if (draggedBookmark) {                 // dropping a bookmark INTO this folder
-        springLoad(path, hasKids, expanded);
+      const open = state.expanded.has(path);
+      if (draggedBookmark) {
+        springLoad(path, hasKids, open);
+        clearFolderMarks();
         if (draggedBookmark.folder === path) return;   // already here
         e.preventDefault();
-        clearFolderMarks();
         row.classList.add("drop-into");
         return;
       }
-      if (draggedFolder === null || path === draggedFolder) return;
-      springLoad(path, hasKids, expanded);   // hover -> auto-expand
-      const zone = folderZone(e, row);
-      const t = folderTarget(path, zone);
-      if (!canMoveFolder(draggedFolder, t.to)) return;
-      e.preventDefault();
+      if (draggedFolder === null) return;
+      if (path !== draggedFolder) springLoad(path, hasKids, open);
+      const zone = folderZone(e, row, hasKids && open);
+      const t = zone && folderTarget(row, zone);
       clearFolderMarks();
-      if (zone === "into") {
-        row.classList.add("drop-into");
-      } else if (zone === "after") {
-        row.classList.add("drop-after");
-        setSeparatorSpan(row);
-      } else {
-        const prev = row.previousElementSibling;
-        if (prev) { prev.classList.add("drop-after"); setSeparatorSpan(prev, row); }
-        else { row.classList.add("drop-before"); setSeparatorSpan(row); }
-      }
+      if (!t) return;
+      e.preventDefault();
+      if (zone === "into") row.classList.add("drop-into");
+      else markGap(row, zone);
     };
     row.ondrop = (e) => {
+      e.preventDefault();
+      clearFolderMarks();
+      cancelSpring();
       if (draggedBookmark) {
-        e.preventDefault();
         const bm = draggedBookmark;
-        clearFolderMarks();
-        cancelSpring();
         if (bm.folder !== path) moveBookmark(bm, path);
         return;
       }
-      if (draggedFolder === null || path === draggedFolder) return;
-      e.preventDefault();
-      const t = folderTarget(path, folderZone(e, row));
-      const from = draggedFolder;
-      clearFolderMarks();
-      cancelSpring();
-      if (canMoveFolder(from, t.to)) moveFolder(from, t.to, t.before);
+      if (draggedFolder === null) return;
+      const zone = folderZone(e, row, hasKids && state.expanded.has(path));
+      const t = zone && folderTarget(row, zone);
+      if (!t) return;
+      if (zone === "into") state.expanded.add(path);
+      moveFolder(draggedFolder, t.to, t.before);
     };
 
     container.appendChild(row);
@@ -296,25 +311,55 @@ function renderTreeInto(map, container, depth) {
   }
 }
 
-// which part of a folder row the pointer is over -> drop intent
-function folderZone(e, row) {
+// --- drop targeting ---
+function parentOf(path) { return path.split("/").slice(0, -1).join("/"); }
+
+function folderZone(e, row, showsKids) {
   const r = row.getBoundingClientRect();
+  if (!r.height) return null;
+  const band = showsKids ? 0.4 : 0.3;
   const y = e.clientY - r.top;
-  if (y < r.height * 0.28) return "before";
-  if (y > r.height * 0.72) return "after";
+  if (y < r.height * band) return "before";
+  if (y > r.height * (1 - band)) return "after";
   return "into";
 }
-// resolve the dragged folder's new path + insertion anchor for a row + zone
-function folderTarget(rowPath, zone) {
-  const leaf = draggedFolder.split("/").pop();
-  if (zone === "into") return { to: rowPath + "/" + leaf, before: "" };   // last child
-  const parent = rowPath.split("/").slice(0, -1).join("/");
-  const to = parent ? parent + "/" + leaf : leaf;                          // "" => root
-  if (zone === "before") return { to, before: rowPath };
-  const sibs = childFolders(parent).filter((p) => p !== draggedFolder);    // "after"
-  const idx = sibs.indexOf(rowPath);
-  return { to, before: idx >= 0 && idx + 1 < sibs.length ? sibs[idx + 1] : "" };
+
+function gapNext(row, zone) {
+  return zone === "before" ? row : row.nextElementSibling;
 }
+
+// Resolve a row + zone to the move payload, or null when the drop is not
+// allowed or would leave the folder exactly where it already is
+function folderTarget(row, zone) {
+  const from = draggedFolder;
+  const leaf = from.split("/").pop();
+  let to, before;
+  if (zone === "into") {
+    const path = row.dataset.path;
+    to = path + "/" + leaf;
+    before = childFolders(path).find((p) => p !== from) || "";
+  } else {
+    const next = gapNext(row, zone);
+    if (next && next.dataset.path === from) return null;
+    const parent = next ? parentOf(next.dataset.path) : "";
+    to = parent ? parent + "/" + leaf : leaf;
+    before = next ? next.dataset.path : "";
+  }
+  if (!canMoveFolder(from, to)) return null;
+  if (to === from && before === nextSibling(from)) return null;  // already there: nothing to do
+  return { to, before };
+}
+
+// Paint the separator in the gap, indented to the level the folder lands ats
+function markGap(row, zone) {
+  const tree = $("folderTree");
+  const next = gapNext(row, zone);
+  const above = next ? next.previousElementSibling : tree.lastElementChild;
+  const level = next || tree.firstElementChild;
+  if (above) { above.classList.add("drop-after"); setSeparatorSpan(above, level); }
+  else if (next) { next.classList.add("drop-before"); setSeparatorSpan(next, next); }
+}
+
 function canMoveFolder(from, to) {
   if (!to) return false;
   return !to.startsWith(from + "/");     // not into own descendant (to === from is ok: reorder)
@@ -366,7 +411,7 @@ function closeFolderMenus() {
   document.querySelectorAll(".folder-menu").forEach((m) => (m.hidden = true));
 }
 function nextSibling(path) {
-  const parent = path.split("/").slice(0, -1).join("/");
+  const parent = parentOf(path);
   const sibs = childFolders(parent);
   const i = sibs.indexOf(path);
   return i >= 0 && i + 1 < sibs.length ? sibs[i + 1] : "";
@@ -423,29 +468,54 @@ function renderTree() {
   renderTreeInto(buildFolderTree(), tree, 0);
 }
 
-// Dropping a *sub*folder onto Homepage (or the empty tree area) reparents it to
-// the top level — the reliable way to reach root, since a row's middle = "nest".
+// Dropping onto Homepage or into the empty space under the tree sends a
+// folder to the end of the top level
+// Homepage takes subfolders only
 function wireRootDrop(home, tree) {
-  const isRootTarget = (el, e) =>
-    draggedFolder !== null && draggedFolder.includes("/") &&   // only subfolders
-    !(el === tree && e.target.closest(".folder-row"));         // rows own their zones
-  const over = (el) => (e) => {
-    if (!isRootTarget(el, e)) return;
-    e.preventDefault();
-    clearFolderMarks();
-    if (el === home) el.classList.add("drop-root");
+  const rootTarget = () => {
+    if (draggedFolder === null) return null;
+    const leaf = draggedFolder.split("/").pop();
+    if (!canMoveFolder(draggedFolder, leaf)) return null;
+    if (leaf === draggedFolder && nextSibling(draggedFolder) === "") return null;
+    return { to: leaf, before: "" };
   };
-  const leave = (el) => (e) => { if (e.target === el) el.classList.remove("drop-root"); };
-  const drop = (el) => (e) => {
-    if (!isRootTarget(el, e)) return;
+  const homeTarget = () =>
+    draggedFolder !== null && draggedFolder.includes("/") ? rootTarget() : null;
+
+  home.ondragover = (e) => {
+    const t = homeTarget();
+    clearFolderMarks();
+    if (!t) return;
     e.preventDefault();
-    const from = draggedFolder, leaf = from.split("/").pop();
+    home.classList.add("drop-root");
+  };
+  home.ondragleave = (e) => { if (e.target === home) home.classList.remove("drop-root"); };
+  home.ondrop = (e) => {
+    const t = homeTarget();
+    e.preventDefault();
     clearFolderMarks();
     cancelSpring();
-    if (canMoveFolder(from, leaf)) moveFolder(from, leaf, "");   // append at top level
+    if (t) moveFolder(draggedFolder, t.to, t.before);
   };
-  home.ondragover = over(home); home.ondragleave = leave(home); home.ondrop = drop(home);
-  tree.ondragover = over(tree); tree.ondragleave = leave(tree); tree.ondrop = drop(tree);
+
+  tree.ondragover = (e) => {
+    if (e.target.closest(".folder-row")) return;
+    const t = rootTarget();
+    clearFolderMarks();
+    if (!t) return;
+    e.preventDefault();
+    const last = tree.lastElementChild;
+    if (last) markGap(last, "after");
+  };
+  tree.ondragleave = (e) => { if (!tree.contains(e.relatedTarget)) clearFolderMarks(); };
+  tree.ondrop = (e) => {
+    if (e.target.closest(".folder-row")) return;
+    const t = rootTarget();
+    e.preventDefault();
+    clearFolderMarks();
+    cancelSpring();
+    if (t) moveFolder(draggedFolder, t.to, t.before);
+  };
 }
 
 // Populate the folder autocomplete datalist used by the new/edit form.
