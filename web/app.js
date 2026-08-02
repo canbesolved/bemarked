@@ -40,6 +40,36 @@ function cancelSpring() {
   hoverFolder = null;
 }
 
+// Drag preview: a 30%-transparent clone that follows the cursor
+let dragPreview = null, dragDX = 0, dragDY = 0;
+const BLANK_IMG = new Image();
+BLANK_IMG.src = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+
+function startDragPreview(e, el) {
+  const r = el.getBoundingClientRect();
+  dragDX = e.clientX - r.left;
+  dragDY = e.clientY - r.top;
+  endDragPreview();
+  const p = el.cloneNode(true);
+  p.style.cssText =
+    "position:fixed;left:0;top:0;margin:0;z-index:9999;pointer-events:none;opacity:.7;box-sizing:border-box;" +
+    "min-width:0;width:" + r.width + "px";
+  document.body.appendChild(p);
+  dragPreview = p;
+  e.dataTransfer.setDragImage(BLANK_IMG, 0, 0);
+  moveDragPreview(e);
+}
+function moveDragPreview(e) {
+  if (!dragPreview || (e.clientX === 0 && e.clientY === 0)) return;
+  dragPreview.style.transform = "translate(" + (e.clientX - dragDX) + "px," + (e.clientY - dragDY) + "px)";
+}
+function endDragPreview() {
+  if (dragPreview) { dragPreview.remove(); dragPreview = null; }
+}
+document.addEventListener("dragover", moveDragPreview);
+document.addEventListener("dragend", endDragPreview);
+document.addEventListener("drop", endDragPreview);
+
 // Opens the given URL in a new tab or the same tab based on openInNewTab setting.
 function openLink(url) {
   if (openInNewTab) window.open(url, "_blank", "noopener");
@@ -195,6 +225,7 @@ function renderTreeInto(map, container, depth) {
       e.dataTransfer.effectAllowed = "move";
       e.dataTransfer.setData("text/plain", path);
       row.classList.add("dragging");
+      startDragPreview(e, row);
     };
     row.ondragend = () => { row.classList.remove("dragging"); clearFolderMarks(); cancelSpring(); draggedFolder = null; };
     row.ondragover = (e) => {
@@ -471,6 +502,7 @@ async function renderShortcuts() {
       e.dataTransfer.setData("text/plain", String(i));
       dragIndex = i;
       tile.classList.add("dragging");
+      startDragPreview(e, tile);
     };
     tile.ondragover = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; };
     tile.ondragenter = (e) => {
@@ -603,6 +635,7 @@ function renderRows() {
       e.dataTransfer.effectAllowed = "move";
       e.dataTransfer.setData("text/plain", b.id);
       item.classList.add("dragging");
+      startDragPreview(e, item);
     };
     item.ondragend = () => { item.classList.remove("dragging"); clearFolderMarks(); cancelSpring(); draggedBookmark = null; };
 
