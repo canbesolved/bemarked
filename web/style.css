@@ -211,37 +211,32 @@ button:hover { border-color: var(--accent); }
 .tree-node:hover { background: var(--surface-2); }
 .tree-node.active { background: var(--accent); color: var(--on-accent); }
 
-/* folder rows: label + a '+' button (shown on the selected folder) */
+/* folder rows: label + button (shown on the selected folder) */
 .folder-row {
   position: relative;
   display: flex;
   align-items: center;
   border-radius: 8px;
-  width: max-content;    /* grow past the sidebar when names are long */
-  min-width: 100%;       /* but fill the width so the highlight spans it */
+  width: max-content;
+  min-width: 100%;
 }
 .folder-row:hover { background: var(--surface-2); }
 .folder-row.active { background: var(--accent); }
-/* drag-to-reparent feedback */
 .folder-row.dragging { opacity: .7; }
 .folder-row.drop-into { outline: 2px solid var(--accent); outline-offset: -2px; }
-/* "move to top level" target: Homepage button or empty tree area */
 .drop-root { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 6px; }
-/* straight insertion line centered in a gap; adjacent folders push apart */
-.folder-row.drop-before { margin-top: 8px; }
-.folder-row.drop-after { margin-bottom: 8px; }
 .folder-row.drop-before::before,
 .folder-row.drop-after::after {
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
+  left: var(--sep-x, 0);
+  width: var(--sep-w, 100%);
   height: 2px;
   border-radius: 1px;
   background: var(--accent);
 }
-.folder-row.drop-before::before { top: -5px; }     /* middle of the gap above */
-.folder-row.drop-after::after { bottom: -5px; }    /* middle of the gap below */
+.folder-row.drop-before::before { top: -1px; }
+.folder-row.drop-after::after { bottom: -1px; }
 .folder-row.active .tree-node,
 .folder-row.active .folder-add { color: var(--on-accent); }
 .folder-row .tree-node { flex: 1; }

@@ -42,6 +42,21 @@ function cancelSpring() {
 
 // Drag preview: a 30%-transparent clone that follows the cursor
 let dragPreview = null, dragDX = 0, dragDY = 0;
+let dragSepW = 0;
+
+// Separator span for a folder row
+function folderSpan(row) {
+  const btn = row.querySelector(".tree-node");
+  if (!btn) return { x: 0, w: 0 };
+  const caret = row.querySelector(".folder-caret");
+  const rr = row.getBoundingClientRect();
+  const range = document.createRange();
+  range.selectNodeContents(btn);
+  const title = range.getBoundingClientRect();
+  const hasArrow = caret && !caret.classList.contains("leaf");
+  const left = hasArrow ? caret.getBoundingClientRect().left : title.left;
+  return { x: left - rr.left, w: title.right - left };
+}
 const BLANK_IMG = new Image();
 BLANK_IMG.src = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
 
@@ -222,6 +237,7 @@ function renderTreeInto(map, container, depth) {
     row.ondragstart = (e) => {
       e.stopPropagation();
       draggedFolder = path;
+      dragSepW = folderSpan(row).w;
       e.dataTransfer.effectAllowed = "move";
       e.dataTransfer.setData("text/plain", path);
       row.classList.add("dragging");
@@ -244,7 +260,9 @@ function renderTreeInto(map, container, depth) {
       if (!canMoveFolder(draggedFolder, t.to)) return;
       e.preventDefault();
       clearFolderMarks();
-      row.classList.add(zone === "into" ? "drop-into" : zone === "before" ? "drop-before" : "drop-after");
+      const cls = zone === "into" ? "drop-into" : zone === "before" ? "drop-before" : "drop-after";
+      row.classList.add(cls);
+      if (cls !== "drop-into") setSeparatorSpan(row);
     };
     row.ondrop = (e) => {
       if (draggedBookmark) {
@@ -296,6 +314,13 @@ function canMoveFolder(from, to) {
 function clearFolderMarks() {
   document.querySelectorAll(".drop-into, .drop-before, .drop-after, .drop-root")
     .forEach((el) => el.classList.remove("drop-into", "drop-before", "drop-after", "drop-root"));
+}
+// Position the drop separator
+function setSeparatorSpan(row) {
+  if (!row.querySelector(".tree-node")) return;
+  const s = folderSpan(row);
+  row.style.setProperty("--sep-x", s.x + "px");
+  row.style.setProperty("--sep-w", (dragSepW || s.w) + "px");
 }
 async function moveFolder(from, to, before) {
   try { await api("POST", "/folders/move", { from, to, before }); await load(); }
