@@ -4,10 +4,7 @@
 #include "server.h"
 #include "import.h"
 #include "mongoose.h"
-/* Generated at build time from web/ (see CMakeLists.txt). Served same-origin:
- *   /            -> web_index_html
- *   /style.css   -> web_style_css
- *   /app.js      -> web_app_js  */
+/* Generated at build time from web/ */
 #include "web_index_html.h"
 #include "web_style_css.h"
 #include "web_app_js.h"
@@ -16,6 +13,8 @@
 #include "arrow_down_icon_svg.h"
 #include "add_icon_svg.h"
 #include "app_icon_svg.h"
+#include "favicon_ico.h"
+#include "apple_touch_icon_png.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -159,6 +158,13 @@ static void serve_asset(struct mg_connection *c, const char *ctype,
     char hdr[128];
     snprintf(hdr, sizeof(hdr), "Content-Type: %s\r\n", ctype);
     mg_http_reply(c, 200, hdr, "%.*s", (int)len, (const char *)data);
+}
+
+static void serve_binary_asset(struct mg_connection *c, const char *ctype,
+                               const unsigned char *data, unsigned long len) {
+    mg_printf(c, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\n"
+                 "Content-Length: %lu\r\n\r\n", ctype, len);
+    mg_send(c, data, (size_t)len);
 }
 
 static void list_bookmarks(struct mg_connection *c, struct storage *st,
@@ -352,6 +358,15 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
     }
     if (is_get && mg_strcmp(hm->uri, mg_str("/assets/app_icon.svg")) == 0) {
         serve_asset(c, "image/svg+xml", app_icon_svg, app_icon_svg_len);
+        return;
+    }
+    if (is_get && (mg_strcmp(hm->uri, mg_str("/favicon.ico")) == 0 ||
+                   mg_strcmp(hm->uri, mg_str("/assets/favicon.ico")) == 0)) {
+        serve_binary_asset(c, "image/x-icon", favicon_ico, favicon_ico_len);
+        return;
+    }
+    if (is_get && mg_strcmp(hm->uri, mg_str("/assets/apple-touch-icon.png")) == 0) {
+        serve_binary_asset(c, "image/png", apple_touch_icon_png, apple_touch_icon_png_len);
         return;
     }
 

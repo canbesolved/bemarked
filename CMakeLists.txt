@@ -15,6 +15,8 @@ set(WEB_ASSETS
   "assets/arrow_down_icon.svg:arrow_down_icon_svg"
   "assets/add_icon.svg:add_icon_svg"
   "assets/app_icon.svg:app_icon_svg"
+  "assets/favicon.ico:favicon_ico"
+  "assets/apple-touch-icon.png:apple_touch_icon_png"
 )
 set(WEB_GEN_HEADERS "")
 foreach(entry ${WEB_ASSETS})
