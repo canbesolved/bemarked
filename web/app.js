@@ -105,7 +105,7 @@ function endDragPreview() {
 document.addEventListener("dragover", moveDragPreview);
 document.addEventListener("dragend", endDragPreview);
 document.addEventListener("drop", endDragPreview);
-document.addEventListener("mousemove", endDragPreview);
+document.addEventListener("mousemove", (e) => { if (!e.buttons) endDragPreview(); });
 
 // Opens the given URL in a new tab or the same tab based on openInNewTab setting.
 function openLink(url) {
@@ -611,12 +611,16 @@ async function renderShortcuts() {
       tile.classList.add("dragging");
       startDragPreview(e, tile);
     };
-    tile.ondragover = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; };
-    tile.ondragenter = (e) => {
+
+    tile.ondragover = (e) => {
       e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
       if (dragIndex !== null && dragIndex !== i) tile.classList.add("drop-target");
     };
-    tile.ondragleave = () => tile.classList.remove("drop-target");
+    tile.ondragenter = (e) => e.preventDefault();
+    tile.ondragleave = (e) => {
+      if (!tile.contains(e.relatedTarget)) tile.classList.remove("drop-target");
+    };
     tile.ondrop = (e) => {
       e.preventDefault();
       tile.classList.remove("drop-target");
