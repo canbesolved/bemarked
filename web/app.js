@@ -84,6 +84,7 @@ function endDragPreview() {
 document.addEventListener("dragover", moveDragPreview);
 document.addEventListener("dragend", endDragPreview);
 document.addEventListener("drop", endDragPreview);
+document.addEventListener("mousemove", endDragPreview);
 
 // Opens the given URL in a new tab or the same tab based on openInNewTab setting.
 function openLink(url) {
@@ -725,6 +726,7 @@ function renderRows() {
 //   search results  : search + table (shortcuts hidden)
 //   folder view     : table only (search + shortcuts hidden)
 function render() {
+  endDragPreview();
   renderTree();
   const folderView = !!state.folder;
   const browsing = folderView || !!state.query;
