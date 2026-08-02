@@ -261,9 +261,16 @@ function renderTreeInto(map, container, depth) {
       if (!canMoveFolder(draggedFolder, t.to)) return;
       e.preventDefault();
       clearFolderMarks();
-      const cls = zone === "into" ? "drop-into" : zone === "before" ? "drop-before" : "drop-after";
-      row.classList.add(cls);
-      if (cls !== "drop-into") setSeparatorSpan(row);
+      if (zone === "into") {
+        row.classList.add("drop-into");
+      } else if (zone === "after") {
+        row.classList.add("drop-after");
+        setSeparatorSpan(row);
+      } else {
+        const prev = row.previousElementSibling;
+        if (prev) { prev.classList.add("drop-after"); setSeparatorSpan(prev, row); }
+        else { row.classList.add("drop-before"); setSeparatorSpan(row); }
+      }
     };
     row.ondrop = (e) => {
       if (draggedBookmark) {
@@ -316,17 +323,21 @@ function clearFolderMarks() {
   document.querySelectorAll(".drop-into, .drop-before, .drop-after, .drop-root")
     .forEach((el) => el.classList.remove("drop-into", "drop-before", "drop-after", "drop-root"));
 }
+
 // Position the drop separator
-function setSeparatorSpan(row) {
-  if (!row.querySelector(".tree-node")) return;
-  const s = folderSpan(row);
+function setSeparatorSpan(row, levelRow) {
+  levelRow = levelRow || row;
+  if (!levelRow.querySelector(".tree-node")) return;
+  const s = folderSpan(levelRow);
   row.style.setProperty("--sep-x", s.x + "px");
   row.style.setProperty("--sep-w", (dragSepW || s.w) + "px");
 }
+
 async function moveFolder(from, to, before) {
   try { await api("POST", "/folders/move", { from, to, before }); await load(); }
   catch (err) { alert("Move failed: " + err.message); }
 }
+
 async function moveBookmark(b, folder) {
   try {
     await api("PUT", "/bookmarks/" + encodeURIComponent(b.id), { name: b.name, folder, url: b.url });
