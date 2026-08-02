@@ -169,7 +169,15 @@ int storage_save(struct storage *s, const struct bookmark *b) {
     pthread_mutex_lock(&s->lock);
     existing = find(s, b->id);
     if (existing) {
+        int folder_changed = strcmp(existing->folder, b->folder) != 0;
         *existing = *b;
+        if (folder_changed && s->count > 1) {
+            struct bookmark moved = *existing;
+            size_t idx = (size_t)(existing - s->items);
+            memmove(existing, existing + 1,
+                    (s->count - idx - 1) * sizeof(*existing));
+            s->items[s->count - 1] = moved;
+        }
     } else if (push(s, b) != 0) {
         pthread_mutex_unlock(&s->lock);
         return -1;
